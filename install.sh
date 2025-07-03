@@ -145,8 +145,23 @@ install_cmdy() {
     
     # Install binary (rename to .bin for wrapper)
     echo "Installing binary to $INSTALL_DIR..."
-    mv cmdy "$INSTALL_DIR/cmdy.bin"
-    chmod +x "$INSTALL_DIR/cmdy.bin"
+    echo "Debug: Current directory: $(pwd)"
+    echo "Debug: Looking for binary:"
+    ls -la cmdy* 2>/dev/null || echo "No cmdy files found"
+    echo "Debug: Target directory:"
+    ls -la "$INSTALL_DIR/" 2>/dev/null || echo "Install directory doesn't exist"
+    
+    if [[ -f "cmdy" ]]; then
+        mv cmdy "$INSTALL_DIR/cmdy.bin" || {
+            echo -e "${RED}❌ Failed to move binary${NC}"
+            exit 1
+        }
+        chmod +x "$INSTALL_DIR/cmdy.bin"
+        echo -e "${GREEN}✓ Binary installed as cmdy.bin${NC}"
+    else
+        echo -e "${RED}❌ Binary not found after build${NC}"
+        exit 1
+    fi
     
     # Copy config and scripts
     echo "Installing configuration..."
