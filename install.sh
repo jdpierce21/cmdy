@@ -143,10 +143,10 @@ install_cmdy() {
         exit 1
     }
     
-    # Install binary
+    # Install binary (rename to .bin for wrapper)
     echo "Installing binary to $INSTALL_DIR..."
-    mv cmdy "$INSTALL_DIR/cmdy"
-    chmod +x "$INSTALL_DIR/cmdy"
+    mv cmdy "$INSTALL_DIR/cmdy.bin"
+    chmod +x "$INSTALL_DIR/cmdy.bin"
     
     # Copy config and scripts
     echo "Installing configuration..."
@@ -192,10 +192,7 @@ setup_path() {
 create_wrapper() {
     echo -e "${YELLOW}📝 Creating wrapper script...${NC}"
     
-    # Rename actual binary first
-    mv "$INSTALL_DIR/cmdy" "$INSTALL_DIR/cmdy.bin"
-    
-    # Create wrapper script
+    # Create wrapper script (binary already renamed to .bin)
     cat > "$INSTALL_DIR/cmdy" << 'EOF'
 #!/bin/bash
 
