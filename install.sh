@@ -192,6 +192,10 @@ setup_path() {
 create_wrapper() {
     echo -e "${YELLOW}📝 Creating wrapper script...${NC}"
     
+    # Rename actual binary first
+    mv "$INSTALL_DIR/cmdy" "$INSTALL_DIR/cmdy.bin"
+    
+    # Create wrapper script
     cat > "$INSTALL_DIR/cmdy" << 'EOF'
 #!/bin/bash
 
@@ -205,8 +209,6 @@ cd "$CONFIG_DIR"
 exec "$HOME/.local/bin/cmdy.bin" "$@"
 EOF
 
-    # Rename actual binary
-    mv "$INSTALL_DIR/cmdy" "$INSTALL_DIR/cmdy.bin"
     chmod +x "$INSTALL_DIR/cmdy"
     
     echo -e "${GREEN}✓ Wrapper script created${NC}"
@@ -259,10 +261,16 @@ main() {
     echo "  Scripts: $CONFIG_DIR/scripts/"
     echo
     echo -e "${BLUE}Next steps:${NC}"
-    echo "1. Restart your shell or run: source ~/.bashrc (or ~/.zshrc)"
+    echo "1. Restart your shell or run one of these:"
+    echo "   source ~/.bashrc    # For bash"
+    echo "   source ~/.zshrc     # For zsh"
+    echo "   export PATH=\"$INSTALL_DIR:\$PATH\"  # For current session"
     echo "2. Run 'cmdy' to start using your command assistant!"
     echo "3. Customize $CONFIG_DIR/config.yaml to add your own commands"
     echo "4. Add custom scripts to $CONFIG_DIR/scripts/"
+    echo
+    echo -e "${BLUE}If 'cmdy' command not found:${NC}"
+    echo "  $INSTALL_DIR/cmdy    # Run directly"
     echo
     echo -e "${YELLOW}⭐ Star the repo: $REPO_URL${NC}"
 }
