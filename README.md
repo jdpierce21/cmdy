@@ -12,27 +12,40 @@ A modern CLI command assistant for running OS-specific commands through an inter
 
 ## Installation
 
-1. **Install Go** (if not already installed):
+### 🚀 Quick Install (Recommended)
+
+```bash
+curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash
+```
+
+This one-liner will automatically:
+- ✅ Install dependencies (fzf, Go)
+- ✅ Build cmdy from source  
+- ✅ Install to `~/.local/bin/cmdy`
+- ✅ Set up configuration in `~/.config/cmdy/`
+- ✅ Add to your PATH
+
+### 🔧 Manual Installation
+
+1. **Install dependencies**:
    ```bash
    # Ubuntu/Debian
-   sudo apt install golang-go
+   sudo apt install golang-go fzf
    
    # macOS
-   brew install go
+   brew install go fzf
    ```
 
-2. **Install fzf**:
+2. **Clone and build**:
    ```bash
-   # Ubuntu/Debian
-   sudo apt install fzf
-   
-   # macOS
-   brew install fzf
-   ```
-
-3. **Build the binary**:
-   ```bash
+   git clone https://github.com/jdpierce21/cmdy.git
+   cd cmdy
    ./build.sh
+   ```
+
+3. **Install globally** (optional):
+   ```bash
+   sudo mv cmdy /usr/local/bin/
    ```
 
 ## Usage
