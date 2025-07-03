@@ -1,4 +1,4 @@
-module assist
+module github.com/jdpierce21/cmdy
 
 go 1.21
 

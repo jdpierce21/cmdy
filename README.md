@@ -1,6 +1,6 @@
-# Assist - Go Version
+# cmdy
 
-A modern CLI assistant tool for running OS-specific commands through an interactive menu.
+A modern CLI command assistant for running OS-specific commands through an interactive menu.
 
 ## Features
 
@@ -39,11 +39,11 @@ A modern CLI assistant tool for running OS-specific commands through an interact
 
 ```bash
 # Run the menu
-./assist
+./cmdy
 
 # Or install globally
-sudo mv assist /usr/local/bin/
-assist
+sudo mv cmdy /usr/local/bin/
+cmdy
 ```
 
 ## Configuration
@@ -67,13 +67,14 @@ menu_options:
       darwin: "ifconfig"
 ```
 
-## Benefits over Python version
+## Why cmdy?
 
-- **Instant startup** - No Python/Poetry overhead
-- **Single binary** - No dependency management
-- **Smaller size** - ~5MB vs Python + deps
-- **Cross-platform** - One binary works everywhere
-- **Native performance** - Compiled code
+- **Instant startup** - Compiled Go binary, no interpreter overhead
+- **Single binary** - No dependency management needed
+- **Memory assistance** - Stop looking up commands constantly
+- **OS-aware** - Same config works on Linux, macOS, Windows
+- **Modern UX** - Beautiful fzf interface with fuzzy search
+- **Config-driven** - Customize without touching code
 
 ## Development
 
@@ -82,5 +83,8 @@ menu_options:
 go run main.go
 
 # Build optimized binary
-go build -ldflags="-s -w" -o assist main.go
+go build -ldflags="-s -w" -o cmdy main.go
+
+# Install from source
+go install github.com/jdpierce21/cmdy@latest
 ```

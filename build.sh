@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Build the Go binary
-echo "Building assist..."
+echo "Building cmdy..."
 
 # Check if Go is installed
 if ! command -v go &> /dev/null; then
@@ -13,16 +13,16 @@ if ! command -v go &> /dev/null; then
 fi
 
 # Build the binary
-go build -o assist main.go
+go build -o cmdy main.go
 
 if [ $? -eq 0 ]; then
-    echo "✓ Built successfully: ./assist"
+    echo "✓ Built successfully: ./cmdy"
     echo ""
     echo "Usage:"
-    echo "  ./assist"
+    echo "  ./cmdy"
     echo ""
     echo "To install globally:"
-    echo "  sudo mv assist /usr/local/bin/"
+    echo "  sudo mv cmdy /usr/local/bin/"
 else
     echo "✗ Build failed"
     exit 1
