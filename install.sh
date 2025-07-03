@@ -191,6 +191,9 @@ setup_path() {
 # Function to create wrapper script
 create_wrapper() {
     echo -e "${YELLOW}📝 Creating wrapper script...${NC}"
+    echo "Debug: INSTALL_DIR = $INSTALL_DIR"
+    echo "Debug: Directory contents before:"
+    ls -la "$INSTALL_DIR/"
     
     # Create wrapper script (binary already renamed to .bin)
     cat > "$INSTALL_DIR/cmdy" << 'EOF'
@@ -206,9 +209,18 @@ cd "$CONFIG_DIR"
 exec "$HOME/.local/bin/cmdy.bin" "$@"
 EOF
 
-    chmod +x "$INSTALL_DIR/cmdy"
+    echo "Debug: Directory contents after creating wrapper:"
+    ls -la "$INSTALL_DIR/"
     
-    echo -e "${GREEN}✓ Wrapper script created${NC}"
+    # Check if wrapper was created successfully
+    if [[ -f "$INSTALL_DIR/cmdy" ]]; then
+        chmod +x "$INSTALL_DIR/cmdy"
+        echo -e "${GREEN}✓ Wrapper script created${NC}"
+    else
+        echo -e "${RED}❌ Failed to create wrapper script${NC}"
+        echo "Debug: Wrapper file not found at $INSTALL_DIR/cmdy"
+        exit 1
+    fi
 }
 
 # Function to verify installation
