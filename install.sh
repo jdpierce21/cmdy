@@ -145,11 +145,6 @@ install_cmdy() {
     
     # Install binary (rename to .bin for wrapper)
     echo "Installing binary to $INSTALL_DIR..."
-    echo "Debug: Current directory: $(pwd)"
-    echo "Debug: Looking for binary:"
-    ls -la cmdy* 2>/dev/null || echo "No cmdy files found"
-    echo "Debug: Target directory:"
-    ls -la "$INSTALL_DIR/" 2>/dev/null || echo "Install directory doesn't exist"
     
     if [[ -f "cmdy" ]]; then
         mv cmdy "$INSTALL_DIR/cmdy.bin" || {
@@ -157,7 +152,6 @@ install_cmdy() {
             exit 1
         }
         chmod +x "$INSTALL_DIR/cmdy.bin"
-        echo -e "${GREEN}✓ Binary installed as cmdy.bin${NC}"
     else
         echo -e "${RED}❌ Binary not found after build${NC}"
         exit 1
@@ -206,9 +200,6 @@ setup_path() {
 # Function to create wrapper script
 create_wrapper() {
     echo -e "${YELLOW}📝 Creating wrapper script...${NC}"
-    echo "Debug: INSTALL_DIR = $INSTALL_DIR"
-    echo "Debug: Directory contents before:"
-    ls -la "$INSTALL_DIR/"
     
     # Create wrapper script (binary already renamed to .bin)
     cat > "$INSTALL_DIR/cmdy" << 'EOF'
@@ -224,16 +215,12 @@ cd "$CONFIG_DIR"
 exec "$HOME/.local/bin/cmdy.bin" "$@"
 EOF
 
-    echo "Debug: Directory contents after creating wrapper:"
-    ls -la "$INSTALL_DIR/"
-    
     # Check if wrapper was created successfully
     if [[ -f "$INSTALL_DIR/cmdy" ]]; then
         chmod +x "$INSTALL_DIR/cmdy"
         echo -e "${GREEN}✓ Wrapper script created${NC}"
     else
         echo -e "${RED}❌ Failed to create wrapper script${NC}"
-        echo "Debug: Wrapper file not found at $INSTALL_DIR/cmdy"
         exit 1
     fi
 }
