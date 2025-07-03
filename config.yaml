@@ -1,18 +1,23 @@
+# cmdy configuration file
+# Add your custom commands here - they'll be OS-aware!
+# Supported OS keys: linux, mac, windows, or any custom OS name
+
 menu_options:
   - shortcut: "1"
     name: "System Health Check"
     description: "Check system resources and health status"
     commands:
-      linux: "htop"
+      linux: "top"
       mac: "top"
-      joeos: "top"
+      windows: "taskmgr"
   
   - shortcut: "2"
     name: "Network Info"
     description: "Display network configuration"
     commands:
-      linux: "ip addr show"
+      linux: "ip addr show || ifconfig"
       mac: "ifconfig"
+      windows: "ipconfig /all"
   
   - shortcut: "3"
     name: "Disk Usage"
@@ -20,6 +25,7 @@ menu_options:
     commands:
       linux: "df -h"
       mac: "df -h"
+      windows: "wmic logicaldisk get size,freespace,caption"
   
   - shortcut: "4"
     name: "Process List"
@@ -27,6 +33,7 @@ menu_options:
     commands:
       linux: "ps aux"
       mac: "ps aux"
+      windows: "tasklist"
   
   - shortcut: "5"
     name: "System Info"
@@ -34,6 +41,7 @@ menu_options:
     commands:
       linux: "uname -a && lscpu"
       mac: "system_profiler SPHardwareDataType"
+      windows: "systeminfo"
   
   - shortcut: "q"
     name: "Quit"
@@ -41,3 +49,4 @@ menu_options:
     commands:
       linux: "exit"
       mac: "exit"
+      windows: "exit"
