@@ -1,6 +1,10 @@
 # Go binary
 cmdy
 
+# User scripts are included by default (users can customize)
+# Uncomment the line below to exclude custom scripts:
+# scripts/
+
 # Go build artifacts
 *.exe
 *.exe~

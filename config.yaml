@@ -4,13 +4,12 @@
 
 menu_options:
   - shortcut: "1"
-    name: "System Health Check"
+    name: "update, upgrade, remove packages"
     description: "Check system resources and health status"
     commands:
-      linux: "top"
-      mac: "top"
-      windows: "taskmgr"
-  
+      linux: "sudo apt update && sudo apt upgrade && sudo apt auto-clean"
+      mac: "brew update && brew upgrade"
+
   - shortcut: "2"
     name: "Network Info"
     description: "Display network configuration"
@@ -42,6 +41,38 @@ menu_options:
       linux: "uname -a && lscpu"
       mac: "system_profiler SPHardwareDataType"
       windows: "systeminfo"
+  
+  - shortcut: "6"
+    name: "Database Backup"
+    description: "Create database backup with timestamp"
+    commands:
+      linux: "./scripts/backup.sh"
+      mac: "./scripts/backup.sh"
+      windows: "scripts\\backup.bat"
+  
+  - shortcut: "7"
+    name: "Deploy Application"
+    description: "Deploy to staging environment"
+    commands:
+      linux: "./scripts/deploy.sh staging"
+      mac: "./scripts/deploy.sh staging"
+      windows: "scripts\\deploy.bat staging"
+  
+  - shortcut: "8"
+    name: "System Cleanup"
+    description: "Clean temporary files and caches"
+    commands:
+      linux: "./scripts/cleanup.sh"
+      mac: "./scripts/cleanup.sh"
+      windows: "scripts\\cleanup.bat"
+  
+  - shortcut: "9"
+    name: "Health Check"
+    description: "Detailed system health report"
+    commands:
+      linux: "./scripts/health-check.sh"
+      mac: "./scripts/health-check.sh"
+      windows: "scripts\\health-check.bat"
   
   - shortcut: "q"
     name: "Quit"

@@ -65,7 +65,36 @@ menu_options:
     commands:
       linux: "ip addr show"
       mac: "ifconfig"
+      
+  # Custom scripts
+  - shortcut: "6"
+    name: "Database Backup"
+    description: "Create database backup"
+    commands:
+      linux: "./scripts/backup.sh"
+      mac: "./scripts/backup.sh"
 ```
+
+## Custom Scripts
+
+The `scripts/` directory is where you can add your own custom scripts:
+
+1. **Add your script** to the `scripts/` directory
+2. **Make it executable**: `chmod +x scripts/your-script.sh`
+3. **Reference it in config.yaml** using relative paths
+
+### Included Examples:
+- `scripts/backup.sh` - Database backup with timestamps
+- `scripts/deploy.sh` - Application deployment script
+- `scripts/cleanup.sh` - System cleanup and maintenance
+- `scripts/health-check.sh` - Detailed system health report
+
+### Script Best Practices:
+- Use `#!/bin/bash` or `#!/bin/sh` for shell scripts
+- Add error handling with `set -e`
+- Provide user feedback with colored output
+- Accept arguments for flexibility
+- Make scripts cross-platform when possible
 
 ## Why cmdy?
 
