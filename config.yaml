@@ -4,7 +4,7 @@ menu_options:
     description: "Check system resources and health status"
     commands:
       linux: "htop"
-      darwin: "top"
+      mac: "top"
       joeos: "top"
   
   - shortcut: "2"
@@ -12,32 +12,32 @@ menu_options:
     description: "Display network configuration"
     commands:
       linux: "ip addr show"
-      darwin: "ifconfig"
+      mac: "ifconfig"
   
   - shortcut: "3"
     name: "Disk Usage"
     description: "Show disk space usage"
     commands:
       linux: "df -h"
-      darwin: "df -h"
+      mac: "df -h"
   
   - shortcut: "4"
     name: "Process List"
     description: "List running processes"
     commands:
       linux: "ps aux"
-      darwin: "ps aux"
+      mac: "ps aux"
   
   - shortcut: "5"
     name: "System Info"
     description: "Display system information"
     commands:
       linux: "uname -a && lscpu"
-      darwin: "system_profiler SPHardwareDataType"
+      mac: "system_profiler SPHardwareDataType"
   
   - shortcut: "q"
     name: "Quit"
     description: "Exit the menu"
     commands:
       linux: "exit"
-      darwin: "exit"
+      mac: "exit"

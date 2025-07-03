@@ -23,7 +23,12 @@ type Config struct {
 }
 
 func getOS() string {
-	return strings.ToLower(runtime.GOOS)
+	osType := strings.ToLower(runtime.GOOS)
+	// Map darwin to mac for user-friendly config
+	if osType == "darwin" {
+		return "mac"
+	}
+	return osType
 }
 
 func loadConfig(configPath string) (*Config, error) {

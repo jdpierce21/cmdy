@@ -57,14 +57,14 @@ menu_options:
     description: "Check system resources"
     commands:
       linux: "htop"
-      darwin: "top"
+      mac: "top"
       
   - shortcut: "2"
     name: "Network Info"
     description: "Show network configuration"
     commands:
       linux: "ip addr show"
-      darwin: "ifconfig"
+      mac: "ifconfig"
 ```
 
 ## Why cmdy?
