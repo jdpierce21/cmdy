@@ -23,6 +23,8 @@ A modern CLI command assistant for running OS-specific commands through an inter
 - **🛠️ Self-managing** - Updates and maintains itself
 - **🔒 Config preservation** - Never overwrites your customizations
 - **💬 Transparent** - Clear feedback and helpful error messages
+- **🏗️ Layered structure** - Clear separation of examples vs user scripts
+- **🔒 Safe customization** - User scripts protected from updates
 
 ## Installation
 
@@ -90,13 +92,34 @@ cmdy help          # Show all commands
 
 ## Configuration
 
-### Automatic Script Discovery
+### 🏗️ Layered Script Structure
 
-cmdy automatically discovers executable scripts in the `scripts/` directory! Just:
+cmdy uses a **layered approach** for clear script ownership:
 
-1. **Add your script** to the `scripts/` directory
-2. **Make it executable**: `chmod +x scripts/your-script.sh`
-3. **Run cmdy** - your script appears automatically!
+```
+scripts/
+├── examples/     # 📚 Stock scripts (auto-updated, don't edit)
+├── user/         # 👤 Your scripts (preserved forever, safe to edit)
+└── README.md     # 📖 Documentation
+```
+
+### 🚀 Quick Start
+
+**For new scripts:**
+```bash
+# Add to user directory
+cp my-script.sh scripts/user/
+chmod +x scripts/user/my-script.sh
+# Run cmdy - appears as "[user] my-script"!
+```
+
+**For customizing examples:**
+```bash
+# Copy from examples to user
+cp scripts/examples/backup.sh scripts/user/my-backup.sh
+chmod +x scripts/user/my-backup.sh
+# Edit scripts/user/my-backup.sh safely
+```
 
 ### Manual Configuration
 
@@ -114,11 +137,17 @@ menu_options:
       linux: "ip addr show"
       mac: "ifconfig"
       
-  # Custom scripts (optional - auto-discovered if executable)
-  - display: "Database Backup - Create database backup"
+  # Reference user scripts (optional - auto-discovered if executable)
+  - display: "My Custom Backup - Backup with notifications"
     commands:
-      linux: "./scripts/backup.sh"
-      mac: "./scripts/backup.sh"
+      linux: "./scripts/user/my-backup.sh"
+      mac: "./scripts/user/my-backup.sh"
+      
+  # Reference example scripts with custom names
+  - display: "Quick System Cleanup - Remove temp files"
+    commands:
+      linux: "./scripts/examples/cleanup.sh"
+      mac: "./scripts/examples/cleanup.sh"
 ```
 
 ### Configuration Format
@@ -128,39 +157,89 @@ menu_options:
   - Supported OS keys: `linux`, `mac`, `windows`
   - Use `darwin` instead of `mac` if needed (automatically mapped)
 
-### Smart Deduplication
+### 🧠 Smart Features
 
+**Clear Ownership:**
+- `[example] script-name` - From examples/ (updated automatically)
+- `[user] script-name` - From user/ (yours forever)
+- `script-name` - From config.yaml (manual entries)
+
+**Smart Deduplication:**
 - Scripts in `config.yaml` take precedence over auto-discovered
-- No duplicate entries - cmdy handles this automatically
-- See discovery stats when running: `"Auto-discovered 4 scripts, deduplicated 2"`
+- No duplicate entries across examples/ and user/
+- See discovery stats: `"Auto-discovered 5 scripts, deduplicated 2"`
 
-### Menu Navigation
+**Safe Updates:**
+- examples/ scripts refreshed on every update
+- user/ scripts never touched during updates
+- Your customizations preserved forever
 
-- **Arrow keys** or **fuzzy search** to navigate
-- **Enter** to select and execute
-- **Ctrl+C** or **Escape** to exit
-- No need for explicit quit options - built into fzf
+### 🎯 Menu Navigation
 
-## Custom Scripts
+- **Arrow keys** or **type to search** (fuzzy matching)
+- **Enter** to execute selected command/script
+- **Ctrl+C** or **Escape** to exit cleanly
+- **No quit button needed** - built into fzf
 
-The `scripts/` directory is where you can add your own custom scripts:
+### 🔄 Script Display Format
 
-1. **Add your script** to the `scripts/` directory
-2. **Make it executable**: `chmod +x scripts/your-script.sh`
-3. **Reference it in config.yaml** using relative paths
+```bash
+# Menu shows clear ownership:
+[example] backup          # From examples/ directory
+[example] cleanup         # From examples/ directory  
+[user] my-backup         # From user/ directory
+[user] my-task           # From user/ directory
+System Health            # From config.yaml
+Network Info             # From config.yaml
+```
 
-### Included Examples:
-- `scripts/backup.sh` - Database backup with timestamps
-- `scripts/deploy.sh` - Application deployment script
-- `scripts/cleanup.sh` - System cleanup and maintenance
-- `scripts/health-check.sh` - Detailed system health report
+## 📚 Script Management
 
-### Script Best Practices:
+### 📚 Example Scripts (examples/ directory)
+
+**Stock scripts provided by cmdy:**
+- `backup.sh` - Database backup with timestamps
+- `deploy.sh` - Application deployment to environments
+- `cleanup.sh` - System cleanup and maintenance  
+- `health-check.sh` - Comprehensive system health report
+
+⚠️ **These are updated automatically - don't edit directly!**
+
+### 👤 User Scripts (user/ directory)
+
+**Your personal automation toolkit:**
+
+```bash
+# Create new script
+echo '#!/bin/bash' > scripts/user/my-task.sh
+echo 'echo "Hello from my script!"' >> scripts/user/my-task.sh
+chmod +x scripts/user/my-task.sh
+
+# Copy and customize example
+cp scripts/examples/backup.sh scripts/user/my-backup.sh
+vim scripts/user/my-backup.sh  # Safe to edit!
+
+# Run cmdy to see your scripts
+cmdy  # Shows "[user] my-task" and "[user] my-backup"
+```
+
+### 📄 Script Best Practices
+
+**Structure:**
 - Use `#!/bin/bash` or `#!/bin/sh` for shell scripts
 - Add error handling with `set -e`
-- Provide user feedback with colored output
-- Accept arguments for flexibility
-- Make scripts cross-platform when possible
+- Provide clear user feedback
+
+**Organization:**
+- **examples/**: Learning and templates (don't edit)
+- **user/**: Your customizations and originals (safe to edit)
+- **config.yaml**: Override display names if needed
+
+**Development:**
+- Make executable: `chmod +x scripts/user/your-script.sh`
+- Test locally before adding to menu
+- Version control your user/ directory for backup
+- Use clear, descriptive file names
 
 ## Self-Management Workflow
 
@@ -231,6 +310,16 @@ export PATH="$HOME/.local/bin:$PATH"
 3. git clone repo && cmdy install
 ```
 
+**"No executable scripts found"**
+```bash
+# Add scripts to user directory:
+cp my-script.sh ~/.config/cmdy/scripts/user/
+chmod +x ~/.config/cmdy/scripts/user/my-script.sh
+
+# Or copy from examples:
+cp ~/.config/cmdy/scripts/examples/backup.sh ~/.config/cmdy/scripts/user/
+```
+
 **"No suitable editor found"**
 ```bash
 # Set your preferred editor:
@@ -246,11 +335,34 @@ brew install nano       # macOS
 - New defaults are saved as `config.yaml.new` for reference
 - Check YAML syntax if parsing fails
 
+**Script ownership confusion**
+- `examples/` scripts are updated automatically (don't edit)
+- `user/` scripts are yours forever (safe to edit)
+- Copy from examples/ to user/ to customize
+- Manual config.yaml entries override auto-discovered scripts
+
+### 🔄 Migration from v1.x
+
+**If upgrading from older versions:**
+- Your scripts are automatically moved to `scripts/user/`
+- Fresh examples installed to `scripts/examples/`
+- Config preserved with new structure
+- No manual migration needed!
+
+### 🎆 Installation Paths
+
+**Config locations:**
+- Config: `~/.config/cmdy/config.yaml`
+- Examples: `~/.config/cmdy/scripts/examples/`
+- User scripts: `~/.config/cmdy/scripts/user/`
+- Binary: `~/.local/bin/cmdy`
+
 ### Getting Help
 
 - Run `cmdy help` for command overview
 - Check verbose output - cmdy tells you what's happening
 - All errors include specific solutions
+- Script structure documented in `~/.config/cmdy/scripts/README.md`
 
 ## Development
 
