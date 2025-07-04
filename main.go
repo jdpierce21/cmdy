@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -114,7 +115,163 @@ func executeCommand(command string) error {
 	return cmd.Run()
 }
 
-func main() {
+// Old main function moved to runInteractiveMenu above
+
+func showUsage() {
+	fmt.Println("cmdy - Modern CLI Command Assistant")
+	fmt.Println("")
+	fmt.Println("Usage:")
+	fmt.Println("  cmdy           Run interactive menu")
+	fmt.Println("  cmdy build     Build the binary")
+	fmt.Println("  cmdy install   Install/update globally")
+	fmt.Println("  cmdy dev [msg] Commit, push, and install (dev workflow)")
+	fmt.Println("  cmdy update    Pull latest and rebuild")
+	fmt.Println("  cmdy version   Show current version")
+	fmt.Println("  cmdy config    Edit config file")
+	fmt.Println("  cmdy help      Show this help")
+}
+
+func buildCmdy() {
+	fmt.Println("Building cmdy...")
+	cmd := exec.Command("go", "build", "-ldflags=-s -w", "-o", "cmdy", "main.go")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		fmt.Printf("Build failed: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Println("✓ Build completed: ./cmdy")
+}
+
+func installCmdy() {
+	fmt.Println("Installing cmdy globally...")
+	
+	// Build first
+	buildCmdy()
+	
+	// Determine install location
+	homeDir, _ := os.UserHomeDir()
+	installPath := filepath.Join(homeDir, ".local", "bin", "cmdy")
+	
+	// Create directory if needed
+	os.MkdirAll(filepath.Dir(installPath), 0755)
+	
+	// Copy binary
+	src, err := os.Open("cmdy")
+	if err != nil {
+		fmt.Printf("Failed to open binary: %v\n", err)
+		os.Exit(1)
+	}
+	defer src.Close()
+	
+	dst, err := os.Create(installPath)
+	if err != nil {
+		fmt.Printf("Failed to create install target: %v\n", err)
+		os.Exit(1)
+	}
+	defer dst.Close()
+	
+	_, err = io.Copy(dst, src)
+	if err != nil {
+		fmt.Printf("Failed to copy binary: %v\n", err)
+		os.Exit(1)
+	}
+	
+	// Make executable
+	os.Chmod(installPath, 0755)
+	
+	fmt.Printf("✓ Installed to %s\n", installPath)
+	fmt.Println("Make sure ~/.local/bin is in your PATH")
+}
+
+func devWorkflow() {
+	msg := "Update cmdy"
+	if len(os.Args) > 2 {
+		msg = strings.Join(os.Args[2:], " ")
+	}
+	
+	fmt.Println("Running dev workflow...")
+	
+	// Git add
+	fmt.Println("Staging changes...")
+	cmd := exec.Command("git", "add", ".")
+	if err := cmd.Run(); err != nil {
+		fmt.Printf("Git add failed: %v\n", err)
+		os.Exit(1)
+	}
+	
+	// Git commit
+	fmt.Printf("Committing: %s\n", msg)
+	cmd = exec.Command("git", "commit", "-m", msg)
+	cmd.Stdout = os.Stdout
+	if err := cmd.Run(); err != nil {
+		fmt.Printf("Git commit failed: %v\n", err)
+		os.Exit(1)
+	}
+	
+	// Git push
+	fmt.Println("Pushing to origin...")
+	cmd = exec.Command("git", "push", "origin", "master")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		fmt.Printf("Git push failed: %v\n", err)
+		os.Exit(1)
+	}
+	
+	// Install
+	installCmdy()
+	
+	fmt.Println("✓ Dev workflow completed!")
+}
+
+func updateCmdy() {
+	fmt.Println("Updating cmdy...")
+	
+	// Git pull
+	fmt.Println("Pulling latest changes...")
+	cmd := exec.Command("git", "pull", "origin", "master")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		fmt.Printf("Git pull failed: %v\n", err)
+		os.Exit(1)
+	}
+	
+	// Build and install
+	installCmdy()
+	
+	fmt.Println("✓ Update completed!")
+}
+
+func showVersion() {
+	cmd := exec.Command("git", "rev-parse", "--short", "HEAD")
+	output, err := cmd.Output()
+	if err != nil {
+		fmt.Println("Version: unknown (not in git repo)")
+		return
+	}
+	fmt.Printf("cmdy version: %s\n", strings.TrimSpace(string(output)))
+}
+
+func editConfig() {
+	configPath := "config.yaml"
+	editor := os.Getenv("EDITOR")
+	if editor == "" {
+		editor = "nano" // fallback
+	}
+	
+	cmd := exec.Command(editor, configPath)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		fmt.Printf("Failed to open editor: %v\n", err)
+	}
+}
+
+func runInteractiveMenu() {
 	data, err := os.ReadFile("config.yaml")
 	if err != nil {
 		log.Fatal(err)
@@ -159,5 +316,34 @@ func main() {
 			}
 		}
 	}
+}
+
+func main() {
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "build":
+			buildCmdy()
+		case "install":
+			installCmdy()
+		case "dev":
+			devWorkflow()
+		case "update":
+			updateCmdy()
+		case "version":
+			showVersion()
+		case "config":
+			editConfig()
+		case "help", "--help", "-h":
+			showUsage()
+		default:
+			fmt.Printf("Unknown command: %s\n\n", os.Args[1])
+			showUsage()
+			os.Exit(1)
+		}
+		return
+	}
+	
+	// No arguments - run interactive menu
+	runInteractiveMenu()
 }
 
