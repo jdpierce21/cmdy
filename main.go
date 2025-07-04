@@ -203,19 +203,25 @@ func devWorkflow() {
 	
 	fmt.Println("Running dev workflow...")
 	
-	// Git add
-	fmt.Println("Staging changes...")
-	cmd := exec.Command("git", "add", ".")
-	if err := cmd.Run(); err != nil {
-		fmt.Printf("Git add failed: %v\n", err)
+	// Check if there are any changes first
+	cmd := exec.Command("git", "status", "--porcelain")
+	output, err := cmd.Output()
+	if err != nil {
+		fmt.Printf("Git status failed: %v\n", err)
 		os.Exit(1)
 	}
 	
-	// Check if there are changes to commit
-	cmd = exec.Command("git", "diff", "--cached", "--quiet")
-	if err := cmd.Run(); err == nil {
+	if len(strings.TrimSpace(string(output))) == 0 {
 		fmt.Println("No changes to commit")
 		return
+	}
+	
+	// Git add
+	fmt.Println("Staging changes...")
+	cmd = exec.Command("git", "add", ".")
+	if err := cmd.Run(); err != nil {
+		fmt.Printf("Git add failed: %v\n", err)
+		os.Exit(1)
 	}
 	
 	// Git commit
