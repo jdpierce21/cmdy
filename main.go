@@ -162,10 +162,10 @@ func showUsage() {
 	fmt.Println("")
 	fmt.Println("Usage:")
 	fmt.Println("  cmdy           Run interactive menu")
-	fmt.Println("  cmdy build     Build the binary")
-	fmt.Println("  cmdy install   Install/update globally")
+	fmt.Println("  cmdy build     Build the binary (requires source)")
+	fmt.Println("  cmdy install   Install/update globally (requires source)")
 	fmt.Println("  cmdy dev [msg] Commit, push, and install (dev workflow)")
-	fmt.Println("  cmdy update    Pull latest and rebuild")
+	fmt.Println("  cmdy update    Update to latest version (works for all users)")
 	fmt.Println("  cmdy version   Show current version")
 	fmt.Println("  cmdy config    Edit config file")
 	fmt.Println("  cmdy help      Show this help")
@@ -325,13 +325,10 @@ func updateCmdy() {
 	// Find the cmdy source directory
 	sourceDir := findCmdySource()
 	if sourceDir == "" {
-		fmt.Println("Could not find cmdy source directory.")
+		fmt.Println("No source repository found - using installer method...")
 		fmt.Println("")
-		fmt.Println("Options:")
-		fmt.Println("1. Run 'cmdy update' from within the cmdy git repository")
-		fmt.Println("2. Use installer: curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash")
-		fmt.Println("3. Clone repo: git clone https://github.com/jdpierce21/cmdy.git && cd cmdy && cmdy install")
-		os.Exit(1)
+		updateViaInstaller()
+		return
 	}
 	
 	// Change to source directory
@@ -356,6 +353,29 @@ func updateCmdy() {
 	installCmdy()
 	
 	fmt.Println("✓ Update completed!")
+}
+
+func updateViaInstaller() {
+	fmt.Println("📦 Downloading latest cmdy installer...")
+	
+	// Download and execute installer
+	cmd := exec.Command("bash", "-c", "curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	
+	if err := cmd.Run(); err != nil {
+		fmt.Printf("Installer failed: %v\n", err)
+		fmt.Println("")
+		fmt.Println("Manual options:")
+		fmt.Println("1. Check internet connection")
+		fmt.Println("2. Run manually: curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash")
+		fmt.Println("3. Clone repository: git clone https://github.com/jdpierce21/cmdy.git")
+		os.Exit(1)
+	}
+	
+	fmt.Println("✓ Update completed via installer!")
+	fmt.Println("🔒 Your config and user scripts preserved")
+	fmt.Println("🎆 Latest examples and features installed")
 }
 
 func findCmdySource() string {
