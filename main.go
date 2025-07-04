@@ -152,11 +152,12 @@ func installCmdy() {
 	// Determine install location
 	homeDir, _ := os.UserHomeDir()
 	installPath := filepath.Join(homeDir, ".local", "bin", "cmdy")
+	tempPath := installPath + ".tmp"
 	
 	// Create directory if needed
 	os.MkdirAll(filepath.Dir(installPath), 0755)
 	
-	// Copy binary
+	// Copy binary to temp file first
 	src, err := os.Open("cmdy")
 	if err != nil {
 		fmt.Printf("Failed to open binary: %v\n", err)
@@ -164,9 +165,9 @@ func installCmdy() {
 	}
 	defer src.Close()
 	
-	dst, err := os.Create(installPath)
+	dst, err := os.Create(tempPath)
 	if err != nil {
-		fmt.Printf("Failed to create install target: %v\n", err)
+		fmt.Printf("Failed to create temp file: %v\n", err)
 		os.Exit(1)
 	}
 	defer dst.Close()
@@ -178,7 +179,17 @@ func installCmdy() {
 	}
 	
 	// Make executable
-	os.Chmod(installPath, 0755)
+	os.Chmod(tempPath, 0755)
+	dst.Close() // Close before rename
+	
+	// Atomic rename (works even if target is in use)
+	err = os.Rename(tempPath, installPath)
+	if err != nil {
+		fmt.Printf("Failed to install: %v\n", err)
+		// Clean up temp file
+		os.Remove(tempPath)
+		os.Exit(1)
+	}
 	
 	fmt.Printf("✓ Installed to %s\n", installPath)
 	fmt.Println("Make sure ~/.local/bin is in your PATH")
@@ -198,6 +209,13 @@ func devWorkflow() {
 	if err := cmd.Run(); err != nil {
 		fmt.Printf("Git add failed: %v\n", err)
 		os.Exit(1)
+	}
+	
+	// Check if there are changes to commit
+	cmd = exec.Command("git", "diff", "--cached", "--quiet")
+	if err := cmd.Run(); err == nil {
+		fmt.Println("No changes to commit")
+		return
 	}
 	
 	// Git commit
