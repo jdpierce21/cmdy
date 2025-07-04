@@ -252,8 +252,22 @@ func devWorkflow() {
 func updateCmdy() {
 	fmt.Println("Updating cmdy...")
 	
+	// Find the cmdy source directory
+	sourceDir := findCmdySource()
+	if sourceDir == "" {
+		fmt.Println("Could not find cmdy source directory.")
+		fmt.Println("Please run 'cmdy update' from within the cmdy git repository,")
+		fmt.Println("or use the installer: curl -sSL install.sh | bash")
+		os.Exit(1)
+	}
+	
+	// Change to source directory
+	originalDir, _ := os.Getwd()
+	defer os.Chdir(originalDir)
+	os.Chdir(sourceDir)
+	
 	// Git pull
-	fmt.Println("Pulling latest changes...")
+	fmt.Printf("Pulling latest changes in %s...\n", sourceDir)
 	cmd := exec.Command("git", "pull", "origin", "master")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -269,6 +283,47 @@ func updateCmdy() {
 	installCmdy()
 	
 	fmt.Println("✓ Update completed!")
+}
+
+func findCmdySource() string {
+	// First check current directory
+	if isGitRepo(".") && hasCmdyFiles(".") {
+		dir, _ := os.Getwd()
+		return dir
+	}
+	
+	// Common locations to check
+	homeDir, _ := os.UserHomeDir()
+	locations := []string{
+		filepath.Join(homeDir, "cmdy"),
+		filepath.Join(homeDir, "projects", "cmdy"),
+		filepath.Join(homeDir, "src", "cmdy"),
+		filepath.Join(homeDir, "dev", "cmdy"),
+		filepath.Join(homeDir, "code", "cmdy"),
+		filepath.Join(homeDir, "scripts", "cmdy"),
+	}
+	
+	for _, location := range locations {
+		if isGitRepo(location) && hasCmdyFiles(location) {
+			return location
+		}
+	}
+	
+	return ""
+}
+
+func isGitRepo(dir string) bool {
+	gitDir := filepath.Join(dir, ".git")
+	_, err := os.Stat(gitDir)
+	return err == nil
+}
+
+func hasCmdyFiles(dir string) bool {
+	mainGo := filepath.Join(dir, "main.go")
+	configYaml := filepath.Join(dir, "config.yaml")
+	_, err1 := os.Stat(mainGo)
+	_, err2 := os.Stat(configYaml)
+	return err1 == nil && err2 == nil
 }
 
 func preserveUserConfig() {
