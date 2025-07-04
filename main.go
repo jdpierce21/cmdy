@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -46,7 +45,9 @@ func discoverScripts() []MenuOption {
 	
 	files, err := os.ReadDir(scriptsDir)
 	if err != nil {
-		return discovered // Return empty if scripts dir doesn't exist
+		fmt.Printf("Warning: Cannot read scripts/ directory (%v)\n", err)
+		fmt.Println("Only config.yaml entries will be available")
+		return discovered
 	}
 	
 	currentOS := runtime.GOOS
@@ -73,6 +74,12 @@ func discoverScripts() []MenuOption {
 		discovered = append(discovered, option)
 	}
 	
+	if len(discovered) > 0 {
+		fmt.Printf("Auto-discovered %d executable scripts\n", len(discovered))
+	} else {
+		fmt.Println("No executable scripts found in scripts/ directory")
+	}
+	
 	return discovered
 }
 
@@ -97,14 +104,26 @@ func mergeOptions(config []MenuOption, discovered []MenuOption) []MenuOption {
 	
 	// Add discovered scripts that aren't already in config
 	merged := append([]MenuOption{}, config...)
+	deduped := 0
 	for _, option := range discovered {
 		scriptPath := option.Commands["linux"] // All OS use same path
 		if !configPaths[scriptPath] {
 			merged = append(merged, option)
+		} else {
+			deduped++
 		}
 	}
 	
+	if deduped > 0 {
+		fmt.Printf("Deduplicated %d scripts (already in config)\n", deduped)
+	}
+	
 	return merged
+}
+
+func commandExists(cmd string) bool {
+	_, err := exec.LookPath(cmd)
+	return err == nil
 }
 
 func executeCommand(command string) error {
@@ -133,11 +152,35 @@ func showUsage() {
 
 func buildCmdy() {
 	fmt.Println("Building cmdy...")
+	
+	// Check if Go is available
+	if !commandExists("go") {
+		fmt.Println("Error: Go compiler not found")
+		fmt.Println("")
+		fmt.Println("Solutions:")
+		fmt.Println("1. Install Go: https://golang.org/doc/install")
+		fmt.Println("2. Ubuntu/Debian: sudo apt install golang-go")
+		fmt.Println("3. macOS: brew install go")
+		os.Exit(1)
+	}
+	
+	// Check if main.go exists
+	if _, err := os.Stat("main.go"); err != nil {
+		fmt.Printf("Error: main.go not found (%v)\n", err)
+		fmt.Println("Make sure you're in the cmdy source directory")
+		os.Exit(1)
+	}
+	
 	cmd := exec.Command("go", "build", "-ldflags=-s -w", "-o", "cmdy", "main.go")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		fmt.Printf("Build failed: %v\n", err)
+		fmt.Println("")
+		fmt.Println("Common solutions:")
+		fmt.Println("1. Check for syntax errors in main.go")
+		fmt.Println("2. Run: go mod tidy")
+		fmt.Println("3. Check Go version: go version")
 		os.Exit(1)
 	}
 	fmt.Println("✓ Build completed: ./cmdy")
@@ -148,6 +191,12 @@ func installCmdy() {
 	
 	// Build first
 	buildCmdy()
+	
+	// Verify binary was created
+	if _, err := os.Stat("cmdy"); err != nil {
+		fmt.Printf("Error: Binary not found after build (%v)\n", err)
+		os.Exit(1)
+	}
 	
 	// Determine install location
 	homeDir, _ := os.UserHomeDir()
@@ -256,8 +305,11 @@ func updateCmdy() {
 	sourceDir := findCmdySource()
 	if sourceDir == "" {
 		fmt.Println("Could not find cmdy source directory.")
-		fmt.Println("Please run 'cmdy update' from within the cmdy git repository,")
-		fmt.Println("or use the installer: curl -sSL install.sh | bash")
+		fmt.Println("")
+		fmt.Println("Options:")
+		fmt.Println("1. Run 'cmdy update' from within the cmdy git repository")
+		fmt.Println("2. Use installer: curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash")
+		fmt.Println("3. Clone repo: git clone https://github.com/jdpierce21/cmdy.git && cd cmdy && cmdy install")
 		os.Exit(1)
 	}
 	
@@ -375,41 +427,90 @@ func showVersion() {
 
 func editConfig() {
 	configPath := "config.yaml"
-	editor := os.Getenv("EDITOR")
-	if editor == "" {
-		editor = "nano" // fallback
+	
+	editor, err := findEditor()
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		fmt.Println("")
+		fmt.Println("Solutions:")
+		fmt.Println("1. Set EDITOR environment variable: export EDITOR=vim")
+		fmt.Println("2. Install a text editor: apt install nano")
+		fmt.Println("3. Edit manually: nano config.yaml")
+		return
 	}
 	
+	fmt.Printf("Opening %s with %s...\n", configPath, editor)
 	cmd := exec.Command(editor, configPath)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
-		fmt.Printf("Failed to open editor: %v\n", err)
+		fmt.Printf("Editor failed: %v\n", err)
 	}
 }
 
+func findEditor() (string, error) {
+	// Try environment variable first
+	if editor := os.Getenv("EDITOR"); editor != "" {
+		if commandExists(editor) {
+			return editor, nil
+		}
+		fmt.Printf("Warning: EDITOR '%s' not found, trying fallbacks...\n", editor)
+	}
+	
+	// Progressive fallback
+	candidates := []string{"nano", "vi", "vim", "emacs", "code", "notepad"}
+	for _, candidate := range candidates {
+		if commandExists(candidate) {
+			return candidate, nil
+		}
+	}
+	
+	return "", fmt.Errorf("no suitable text editor found")
+}
+
 func runInteractiveMenu() {
+	fmt.Println("Loading cmdy configuration...")
+	
 	data, err := os.ReadFile("config.yaml")
 	if err != nil {
-		log.Fatal(err)
+		fmt.Printf("Error: Cannot read config.yaml (%v)\n", err)
+		fmt.Println("")
+		fmt.Println("Solutions:")
+		fmt.Println("1. Create config.yaml in current directory")
+		fmt.Println("2. Run from cmdy source directory")
+		fmt.Println("3. Reinstall: curl -sSL install.sh | bash")
+		os.Exit(1)
 	}
 
 	var config struct {
 		MenuOptions []MenuOption `yaml:"menu_options"`
 	}
 	if err := yaml.Unmarshal(data, &config); err != nil {
-		log.Fatal(err)
+		fmt.Printf("Error: Invalid YAML in config.yaml (%v)\n", err)
+		fmt.Println("Please check the file format and try again")
+		os.Exit(1)
 	}
 
+	fmt.Printf("Loaded %d configured menu options\n", len(config.MenuOptions))
+	
 	// Auto-discover scripts and merge with config
 	discovered := discoverScripts()
 	allOptions := mergeOptions(config.MenuOptions, discovered)
 	
 	if len(allOptions) == 0 {
-		log.Fatal("no menu options configured and no scripts found")
+		fmt.Println("Error: No menu options available")
+		fmt.Println("")
+		fmt.Println("Solutions:")
+		fmt.Println("1. Add entries to config.yaml")
+		fmt.Println("2. Add executable scripts to scripts/ directory")
+		fmt.Println("3. Check example config: https://github.com/jdpierce21/cmdy")
+		os.Exit(1)
 	}
+	
+	fmt.Printf("Total menu options: %d\n", len(allOptions))
+	fmt.Println("")
 
 	currentOS := runtime.GOOS
 	if currentOS == "darwin" {
