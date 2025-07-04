@@ -1,16 +1,9 @@
 #!/bin/bash
-
 # Application deployment script example
-# Usage: ./scripts/deploy.sh [environment]
-
 set -e
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
+# Colors
+R='\033[0;31m' G='\033[0;32m' Y='\033[1;33m' B='\033[0;34m' N='\033[0m'
 
 ENVIRONMENT=${1:-"staging"}
 APP_NAME="myapp"

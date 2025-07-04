@@ -3,81 +3,37 @@
 # Supported OS keys: linux, mac, windows, or any custom OS name
 
 menu_options:
-  - shortcut: "1"
-    name: "update, upgrade, remove packages"
-    description: "Check system resources and health status"
+  - display: "update, upgrade, remove packages"
     commands:
       linux: "sudo apt update && sudo apt upgrade && sudo apt auto-clean"
       mac: "brew update && brew upgrade"
 
-  - shortcut: "2"
-    name: "Network Info"
-    description: "Display network configuration"
+  - display: "display network configuration"
     commands:
       linux: "ip addr show || ifconfig"
       mac: "ifconfig"
-      windows: "ipconfig /all"
-  
-  - shortcut: "3"
-    name: "Disk Usage"
-    description: "Show disk space usage"
+
+  - display: "show disk space usage"
     commands:
       linux: "df -h"
       mac: "df -h"
-      windows: "wmic logicaldisk get size,freespace,caption"
-  
-  - shortcut: "4"
-    name: "Process List"
-    description: "List running processes"
+
+  - display: "list running processes"
     commands:
       linux: "ps aux"
       mac: "ps aux"
-      windows: "tasklist"
-  
-  - shortcut: "5"
-    name: "System Info"
-    description: "Display system information"
+
+  - display: "display system information"
     commands:
       linux: "uname -a && lscpu"
       mac: "system_profiler SPHardwareDataType"
-      windows: "systeminfo"
-  
-  - shortcut: "6"
-    name: "Database Backup"
-    description: "Create database backup with timestamp"
-    commands:
-      linux: "./scripts/backup.sh"
-      mac: "./scripts/backup.sh"
-      windows: "scripts\\backup.bat"
-  
-  - shortcut: "7"
-    name: "Deploy Application"
-    description: "Deploy to staging environment"
-    commands:
-      linux: "./scripts/deploy.sh staging"
-      mac: "./scripts/deploy.sh staging"
-      windows: "scripts\\deploy.bat staging"
-  
-  - shortcut: "8"
-    name: "System Cleanup"
-    description: "Clean temporary files and caches"
+
+  - display: "clean temp files and caches"
     commands:
       linux: "./scripts/cleanup.sh"
       mac: "./scripts/cleanup.sh"
-      windows: "scripts\\cleanup.bat"
-  
-  - shortcut: "9"
-    name: "Health Check"
-    description: "Detailed system health report"
+
+  - display: "system health report"
     commands:
       linux: "./scripts/health-check.sh"
       mac: "./scripts/health-check.sh"
-      windows: "scripts\\health-check.bat"
-  
-  - shortcut: "q"
-    name: "Quit"
-    description: "Exit the menu"
-    commands:
-      linux: "exit"
-      mac: "exit"
-      windows: "exit"

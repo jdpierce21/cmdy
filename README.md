@@ -1,14 +1,24 @@
+```
+  ██████╗ ███╗   ███╗ ██████╗  ██╗   ██╗
+ ██╔════╝ ████╗ ████║ ██╔══██╗ ╚██╗ ██╔╝
+ ██║      ██╔████╔██║ ██║  ██║  ╚████╔╝ 
+ ██║      ██║╚██╔╝██║ ██║  ██║   ╚██╔╝  
+ ╚██████╗ ██║ ╚═╝ ██║ ██████╔╝    ██║   
+  ╚═════╝ ╚═╝     ╚═╝ ╚═════╝     ╚═╝   
+```
+
 # cmdy
 
 A modern CLI command assistant for running OS-specific commands through an interactive menu.
 
 ## Features
 
-- **Fast startup** - Single Go binary, no dependencies
-- **Cross-platform** - Linux, macOS, Windows support
-- **Config-driven** - Easy to customize via YAML
-- **Modern UI** - Uses fzf for beautiful menus
-- **OS-aware** - Automatically runs correct commands for your OS
+- **⚡ Lightning fast** - Optimized Go binary with minimal overhead
+- **🌍 Cross-platform** - Linux, macOS, Windows support
+- **📝 Simple config** - Clean YAML format, no complex syntax
+- **🎨 Modern UI** - Beautiful fzf interface with fuzzy search
+- **🔄 OS-aware** - Automatically runs correct commands for your OS
+- **🚀 Zero dependencies** - Single binary, no runtime requirements
 
 ## Installation
 
@@ -51,42 +61,57 @@ This one-liner will automatically:
 ## Usage
 
 ```bash
-# Run the menu
+# Run locally
 ./cmdy
 
-# Or install globally
+# Or install globally and run
 sudo mv cmdy /usr/local/bin/
 cmdy
 ```
 
+### Navigation
+
+- Use **arrow keys** or **type to search** (fuzzy matching)
+- Press **Enter** to execute selected command
+- Press **Ctrl+C** or **Escape** to exit
+- Commands run in your current shell environment
+
 ## Configuration
 
-Edit `config.yaml` to add/modify menu options:
+Edit `config.yaml` to add/modify menu options. Each option has a `display` field (what appears in the menu) and OS-specific `commands`:
 
 ```yaml
 menu_options:
-  - shortcut: "1"
-    name: "System Health"
-    description: "Check system resources"
+  - display: "System Health - Check system resources"
     commands:
       linux: "htop"
       mac: "top"
       
-  - shortcut: "2"
-    name: "Network Info"
-    description: "Show network configuration"
+  - display: "Network Info - Show network configuration"
     commands:
       linux: "ip addr show"
       mac: "ifconfig"
       
   # Custom scripts
-  - shortcut: "6"
-    name: "Database Backup"
-    description: "Create database backup"
+  - display: "Database Backup - Create database backup"
     commands:
       linux: "./scripts/backup.sh"
       mac: "./scripts/backup.sh"
 ```
+
+### Configuration Format
+
+- **`display`** - Text shown in the fzf menu (can be any descriptive text)
+- **`commands`** - Map of OS-specific commands to run
+  - Supported OS keys: `linux`, `mac`, `windows`
+  - Use `darwin` instead of `mac` if needed (automatically mapped)
+
+### Menu Navigation
+
+- **Arrow keys** or **fuzzy search** to navigate
+- **Enter** to select and execute
+- **Ctrl+C** or **Escape** to exit
+- No need for explicit quit options - built into fzf
 
 ## Custom Scripts
 
@@ -111,12 +136,13 @@ The `scripts/` directory is where you can add your own custom scripts:
 
 ## Why cmdy?
 
-- **Instant startup** - Compiled Go binary, no interpreter overhead
-- **Single binary** - No dependency management needed
-- **Memory assistance** - Stop looking up commands constantly
-- **OS-aware** - Same config works on Linux, macOS, Windows
-- **Modern UX** - Beautiful fzf interface with fuzzy search
-- **Config-driven** - Customize without touching code
+- **⚡ Instant startup** - Highly optimized Go binary (<100 lines of code)
+- **📦 Single binary** - No dependency management or runtime requirements
+- **🧠 Memory assistance** - Stop looking up commands constantly
+- **🌐 OS-aware** - Same config works across all platforms
+- **🎯 Modern UX** - Intuitive fzf interface with fuzzy search
+- **⚙️ Config-driven** - Customize without touching code
+- **🔧 Lean & Fast** - Minimal memory footprint, maximum performance
 
 ## Development
 

@@ -18,6 +18,31 @@ REPO_RAW_URL="https://raw.githubusercontent.com/jdpierce21/cmdy/master"
 INSTALL_DIR="$HOME/.local/bin"
 CONFIG_DIR="$HOME/.config/cmdy"
 
+# Function to show logo
+show_logo() {
+    # Try to use oh-my-logo if available
+    if command -v npx &> /dev/null; then
+        echo
+        npx --yes oh-my-logo "cmdy" --filled --color nebula 2>/dev/null || fallback_logo
+        echo
+    else
+        fallback_logo
+    fi
+}
+
+# Fallback ASCII logo
+fallback_logo() {
+    echo -e "${BLUE}"
+    echo "  ██████╗ ███╗   ███╗ ██████╗  ██╗   ██╗"
+    echo " ██╔════╝ ████╗ ████║ ██╔══██╗ ╚██╗ ██╔╝"
+    echo " ██║      ██╔████╔██║ ██║  ██║  ╚████╔╝ "
+    echo " ██║      ██║╚██╔╝██║ ██║  ██║   ╚██╔╝  "
+    echo " ╚██████╗ ██║ ╚═╝ ██║ ██████╔╝    ██║   "
+    echo "  ╚═════╝ ╚═╝     ╚═╝ ╚═════╝     ╚═╝   "
+    echo -e "${NC}"
+}
+
+show_logo
 echo -e "${BLUE}🚀 Installing cmdy - Modern CLI Command Assistant${NC}"
 echo "Repository: $REPO_URL"
 echo

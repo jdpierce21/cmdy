@@ -8,9 +8,7 @@ This directory is where you can add your own custom scripts that cmdy can execut
 2. **Make it executable**: `chmod +x scripts/your-script.sh`
 3. **Reference it in config.yaml**:
    ```yaml
-   - shortcut: "6"
-     name: "My Custom Script"
-     description: "Does something awesome"
+   - display: "My Custom Script - Does something awesome"
      commands:
        linux: "./scripts/your-script.sh"
        mac: "./scripts/your-script.sh"

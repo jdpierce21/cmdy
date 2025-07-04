@@ -1,33 +1,13 @@
-# Go binary
+# Binaries
 cmdy
+cmdy.exe
 
-# User scripts are included by default (users can customize)
-# Uncomment the line below to exclude custom scripts:
-# scripts/
-
-# Go build artifacts
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-
-# Go test binary, built with `go test -c`
-*.test
-
-# Go coverage files
-*.out
-*.prof
-
-# Go workspace file
-go.work
+# OS files
+.DS_Store
+Thumbs.db
 
 # IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# OS files
-.DS_Store
-Thumbs.db
