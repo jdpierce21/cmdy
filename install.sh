@@ -18,6 +18,17 @@ REPO_RAW_URL="https://raw.githubusercontent.com/jdpierce21/cmdy/master"
 INSTALL_DIR="$HOME/.local/bin"
 CONFIG_DIR="$HOME/.config/cmdy"
 
+# Show branding
+echo -e "${BLUE}"
+echo "  ██████╗ ███╗   ███╗ ██████╗  ██╗   ██╗"
+echo " ██╔════╝ ████╗ ████║ ██╔══██╗ ╚██╗ ██╔╝"
+echo " ██║      ██╔████╔██║ ██║  ██║  ╚████╔╝ "
+echo " ██║      ██║╚██╔╝██║ ██║  ██║   ╚██╔╝  "
+echo " ╚██████╗ ██║ ╚═╝ ██║ ██████╔╝    ██║   "
+echo "  ╚═════╝ ╚═╝     ╚═╝ ╚═════╝     ╚═╝   "
+echo -e "${NC}"
+echo -e "${BLUE}🚀 Installing cmdy${NC}"
+
 
 # Function to detect OS
 detect_os() {
@@ -33,17 +44,16 @@ detect_os() {
 install_dependencies() {
     local os=$(detect_os)
     
-    
     # Check and install fzf
     if ! command -v fzf &> /dev/null; then
         case $os in
             "linux")
                 if command -v apt &> /dev/null; then
-                    sudo apt update && sudo apt install -y fzf
+                    sudo apt update &> /dev/null && sudo apt install -y fzf &> /dev/null
                 elif command -v yum &> /dev/null; then
-                    sudo yum install -y fzf
+                    sudo yum install -y fzf &> /dev/null
                 elif command -v pacman &> /dev/null; then
-                    sudo pacman -S fzf
+                    sudo pacman -S fzf &> /dev/null
                 else
                     echo -e "${RED}❌ Cannot install fzf automatically. Please install manually.${NC}"
                     echo "Visit: https://github.com/junegunn/fzf#installation"
@@ -52,7 +62,7 @@ install_dependencies() {
                 ;;
             "mac")
                 if command -v brew &> /dev/null; then
-                    brew install fzf
+                    brew install fzf &> /dev/null
                 else
                     echo -e "${RED}❌ Homebrew not found. Please install fzf manually.${NC}"
                     echo "Visit: https://github.com/junegunn/fzf#installation"
@@ -65,7 +75,6 @@ install_dependencies() {
                 exit 1
                 ;;
         esac
-    else
     fi
     
     # Check and install Go (for building from source)
@@ -73,11 +82,11 @@ install_dependencies() {
         case $os in
             "linux")
                 if command -v apt &> /dev/null; then
-                    sudo apt update && sudo apt install -y golang-go
+                    sudo apt update &> /dev/null && sudo apt install -y golang-go &> /dev/null
                 elif command -v yum &> /dev/null; then
-                    sudo yum install -y golang
+                    sudo yum install -y golang &> /dev/null
                 elif command -v pacman &> /dev/null; then
-                    sudo pacman -S go
+                    sudo pacman -S go &> /dev/null
                 else
                     echo -e "${RED}❌ Cannot install Go automatically. Please install manually.${NC}"
                     echo "Visit: https://golang.org/doc/install"
@@ -86,7 +95,7 @@ install_dependencies() {
                 ;;
             "mac")
                 if command -v brew &> /dev/null; then
-                    brew install go
+                    brew install go &> /dev/null
                 else
                     echo -e "${RED}❌ Homebrew not found. Please install Go manually.${NC}"
                     echo "Visit: https://golang.org/doc/install"
@@ -99,7 +108,6 @@ install_dependencies() {
                 exit 1
                 ;;
         esac
-    else
     fi
 }
 
@@ -111,19 +119,18 @@ create_directories() {
 
 # Function to download and build cmdy
 install_cmdy() {
-    
     # Create temporary directory
     TEMP_DIR=$(mktemp -d)
     cd "$TEMP_DIR"
     
     # Clone repository
-    git clone "$REPO_URL.git" . || {
+    git clone "$REPO_URL.git" . &> /dev/null || {
         echo -e "${RED}❌ Failed to clone repository${NC}"
         exit 1
     }
     
     # Build binary
-    go build -o cmdy main.go || {
+    go build -o cmdy main.go &> /dev/null || {
         echo -e "${RED}❌ Failed to build cmdy${NC}"
         exit 1
     }
@@ -147,7 +154,7 @@ install_cmdy() {
     if [[ ! -f "$CONFIG_DIR/config.yaml" ]]; then
         cp config.yaml "$CONFIG_DIR/"
     else
-        cp config.yaml "$CONFIG_DIR/config.yaml.new"
+        cp config.yaml "$CONFIG_DIR/config.yaml.new" &> /dev/null
     fi
     
     # Create layered script structure
@@ -157,12 +164,12 @@ install_cmdy() {
     mkdir -p "$CONFIG_DIR/scripts/user"
     
     # Always update example scripts
-    cp scripts/*.sh "$CONFIG_DIR/scripts/examples/" 2>/dev/null || true
-    chmod +x "$CONFIG_DIR/scripts/examples/"*.sh 2>/dev/null || true
+    cp scripts/*.sh "$CONFIG_DIR/scripts/examples/" &> /dev/null || true
+    chmod +x "$CONFIG_DIR/scripts/examples/"*.sh &> /dev/null || true
     
     # Migrate existing user scripts if any
     if [[ -d "$CONFIG_DIR/scripts" ]] && [[ ! -d "$CONFIG_DIR/scripts/examples" ]]; then
-        find "$CONFIG_DIR/scripts" -name "*.sh" -maxdepth 1 -exec mv {} "$CONFIG_DIR/scripts/user/" \;
+        find "$CONFIG_DIR/scripts" -name "*.sh" -maxdepth 1 -exec mv {} "$CONFIG_DIR/scripts/user/" \; &> /dev/null
     fi
     
     # Create helpful README
@@ -195,7 +202,6 @@ EOF
 
 # Function to setup PATH
 setup_path() {
-    
     # Add to PATH in shell profile
     SHELL_RC=""
     if [[ "$SHELL" == *"zsh"* ]]; then
@@ -209,7 +215,6 @@ setup_path() {
             echo "" >> "$SHELL_RC"
             echo "# cmdy installer" >> "$SHELL_RC"
             echo "export PATH=\"$INSTALL_DIR:\$PATH\"" >> "$SHELL_RC"
-        else
         fi
     fi
     
@@ -245,19 +250,19 @@ EOF
 
 # Function to verify installation
 verify_installation() {
-    
-    if command -v cmdy &> /dev/null; then
-    else
+    if ! command -v cmdy &> /dev/null; then
+        echo -e "${RED}❌ Installation failed - cmdy not found${NC}"
+        exit 1
     fi
     
-    if [[ -f "$CONFIG_DIR/config.yaml" ]]; then
-    else
+    if [[ ! -f "$CONFIG_DIR/config.yaml" ]]; then
         echo -e "${RED}❌ Configuration not found${NC}"
+        exit 1
     fi
     
-    if [[ -d "$CONFIG_DIR/scripts" ]]; then
-    else
+    if [[ ! -d "$CONFIG_DIR/scripts" ]]; then
         echo -e "${RED}❌ Scripts not found${NC}"
+        exit 1
     fi
 }
 
@@ -271,7 +276,7 @@ main() {
     setup_path
     verify_installation
     
-    echo "✓ Installed"
+    echo -e "${GREEN}✓ Installed${NC}"
 }
 
 # Run main function
