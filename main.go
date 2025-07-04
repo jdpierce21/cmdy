@@ -262,10 +262,50 @@ func updateCmdy() {
 		os.Exit(1)
 	}
 	
+	// Check if config has changed and preserve user config
+	preserveUserConfig()
+	
 	// Build and install
 	installCmdy()
 	
 	fmt.Println("✓ Update completed!")
+}
+
+func preserveUserConfig() {
+	homeDir, _ := os.UserHomeDir()
+	userConfigPath := filepath.Join(homeDir, ".config", "cmdy", "config.yaml")
+	newConfigPath := "config.yaml"
+	
+	// Check if user has a config and if it differs from new default
+	if _, err := os.Stat(userConfigPath); err == nil {
+		// User config exists, check if new config is different
+		cmd := exec.Command("diff", "-q", userConfigPath, newConfigPath)
+		if err := cmd.Run(); err != nil {
+			// Configs differ, backup the new one
+			backupPath := filepath.Join(homeDir, ".config", "cmdy", "config.yaml.new")
+			if err := copyFile(newConfigPath, backupPath); err == nil {
+				fmt.Println("⚠️  Config updated - new default saved as config.yaml.new")
+				fmt.Println("🔒 Your custom config preserved")
+			}
+		}
+	}
+}
+
+func copyFile(src, dst string) error {
+	source, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer source.Close()
+	
+	dest, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer dest.Close()
+	
+	_, err = io.Copy(dest, source)
+	return err
 }
 
 func showVersion() {

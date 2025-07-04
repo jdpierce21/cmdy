@@ -184,9 +184,22 @@ install_cmdy() {
     
     # Copy config and scripts
     echo "Installing configuration..."
-    cp config.yaml "$CONFIG_DIR/"
+    
+    # Only copy config if it doesn't exist (preserve user customizations)
+    if [[ ! -f "$CONFIG_DIR/config.yaml" ]]; then
+        cp config.yaml "$CONFIG_DIR/"
+        echo -e "${GREEN}✓ Default config installed${NC}"
+    else
+        echo -e "${YELLOW}⚠️  Existing config preserved (not overwritten)${NC}"
+        # Optionally create a .new version for reference
+        cp config.yaml "$CONFIG_DIR/config.yaml.new"
+        echo -e "${BLUE}ℹ️  New default config saved as config.yaml.new${NC}"
+    fi
+    
+    # Always update scripts (they're examples, less likely to be customized)
     cp -r scripts "$CONFIG_DIR/"
     chmod +x "$CONFIG_DIR/scripts"/*.sh 2>/dev/null || true
+    echo -e "${GREEN}✓ Example scripts updated${NC}"
     
     # Cleanup
     cd "$HOME"
