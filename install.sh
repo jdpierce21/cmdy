@@ -277,6 +277,11 @@ main() {
     verify_installation
     
     echo -e "${GREEN}✓ Installed${NC}"
+    echo
+    echo -e "${BLUE}Next steps:${NC}"
+    echo "• Run 'cmdy' to start"
+    echo "• Add scripts to ~/.config/cmdy/scripts/user/"
+    echo "• Edit ~/.config/cmdy/config.yaml to customize"
 }
 
 # Run main function

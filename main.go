@@ -292,6 +292,17 @@ func devWorkflow() {
 }
 
 func updateCmdy() {
+	// Show branding
+	fmt.Println("\033[0;34m")
+	fmt.Println("  ██████╗ ███╗   ███╗ ██████╗  ██╗   ██╗")
+	fmt.Println(" ██╔════╝ ████╗ ████║ ██╔══██╗ ╚██╗ ██╔╝")
+	fmt.Println(" ██║      ██╔████╔██║ ██║  ██║  ╚████╔╝ ")
+	fmt.Println(" ██║      ██║╚██╔╝██║ ██║  ██║   ╚██╔╝  ")
+	fmt.Println(" ╚██████╗ ██║ ╚═╝ ██║ ██████╔╝    ██║   ")
+	fmt.Println("  ╚═════╝ ╚═╝     ╚═╝ ╚═════╝     ╚═╝   ")
+	fmt.Println("\033[0m")
+	fmt.Println("\033[0;34m🔄 Updating cmdy\033[0m")
+	
 	// Find the cmdy source directory
 	sourceDir := findCmdySource()
 	if sourceDir == "" {
@@ -309,7 +320,7 @@ func updateCmdy() {
 	cmd.Stdout = nil
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		fmt.Printf("Update failed: %v\n", err)
+		fmt.Printf("\033[0;31m❌ Update failed: %v\033[0m\n", err)
 		os.Exit(1)
 	}
 	
@@ -319,11 +330,20 @@ func updateCmdy() {
 	// Build and install
 	installCmdy()
 	
-	fmt.Println("✓ Updated")
+	fmt.Println("\033[0;32m✓ Updated\033[0m")
 }
 
 func updateViaInstaller() {
-	fmt.Println("Updating...")
+	// Show branding
+	fmt.Println("\033[0;34m")
+	fmt.Println("  ██████╗ ███╗   ███╗ ██████╗  ██╗   ██╗")
+	fmt.Println(" ██╔════╝ ████╗ ████║ ██╔══██╗ ╚██╗ ██╔╝")
+	fmt.Println(" ██║      ██╔████╔██║ ██║  ██║  ╚████╔╝ ")
+	fmt.Println(" ██║      ██║╚██╔╝██║ ██║  ██║   ╚██╔╝  ")
+	fmt.Println(" ╚██████╗ ██║ ╚═╝ ██║ ██████╔╝    ██║   ")
+	fmt.Println("  ╚═════╝ ╚═╝     ╚═╝ ╚═════╝     ╚═╝   ")
+	fmt.Println("\033[0m")
+	fmt.Println("\033[0;34m🔄 Updating cmdy\033[0m")
 	
 	// Download and execute installer
 	cmd := exec.Command("bash", "-c", "curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash")
@@ -331,11 +351,11 @@ func updateViaInstaller() {
 	cmd.Stderr = os.Stderr
 	
 	if err := cmd.Run(); err != nil {
-		fmt.Printf("Update failed: %v\n", err)
+		fmt.Printf("\033[0;31m❌ Update failed: %v\033[0m\n", err)
 		os.Exit(1)
 	}
 	
-	fmt.Println("✓ Updated")
+	fmt.Println("\033[0;32m✓ Updated\033[0m")
 }
 
 func findCmdySource() string {
