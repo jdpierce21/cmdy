@@ -41,12 +41,31 @@ func runFzf(options []MenuOption) (string, error) {
 
 func discoverScripts() []MenuOption {
 	var discovered []MenuOption
-	scriptsDir := "scripts"
+	
+	// Scan both example and user script directories
+	dirs := []string{"scripts/examples", "scripts/user", "scripts"} // Keep "scripts" for backward compatibility
+	
+	for _, scriptsDir := range dirs {
+		scripts := scanScriptDirectory(scriptsDir)
+		discovered = append(discovered, scripts...)
+	}
+	
+	if len(discovered) > 0 {
+		fmt.Printf("Auto-discovered %d executable scripts\n", len(discovered))
+	} else {
+		fmt.Println("No executable scripts found in scripts/ directories")
+		fmt.Println("Add scripts to scripts/user/ or scripts/examples/")
+	}
+	
+	return discovered
+}
+
+func scanScriptDirectory(scriptsDir string) []MenuOption {
+	var discovered []MenuOption
 	
 	files, err := os.ReadDir(scriptsDir)
 	if err != nil {
-		fmt.Printf("Warning: Cannot read scripts/ directory (%v)\n", err)
-		fmt.Println("Only config.yaml entries will be available")
+		// Silent skip for missing directories (examples/ might not exist yet)
 		return discovered
 	}
 	
@@ -56,11 +75,19 @@ func discoverScripts() []MenuOption {
 	}
 	
 	for _, file := range files {
-		if file.IsDir() || !isExecutable(filepath.Join(scriptsDir, file.Name())) {
+		if file.IsDir() || file.Name() == "README.md" || !isExecutable(filepath.Join(scriptsDir, file.Name())) {
 			continue
 		}
 		
+		// Create display name with directory prefix for clarity
 		name := strings.TrimSuffix(file.Name(), filepath.Ext(file.Name()))
+		dirName := filepath.Base(scriptsDir)
+		if dirName == "examples" {
+			name = "[example] " + name
+		} else if dirName == "user" {
+			name = "[user] " + name
+		}
+		
 		scriptPath := "./" + filepath.Join(scriptsDir, file.Name())
 		
 		option := MenuOption{
@@ -72,12 +99,6 @@ func discoverScripts() []MenuOption {
 			},
 		}
 		discovered = append(discovered, option)
-	}
-	
-	if len(discovered) > 0 {
-		fmt.Printf("Auto-discovered %d executable scripts\n", len(discovered))
-	} else {
-		fmt.Println("No executable scripts found in scripts/ directory")
 	}
 	
 	return discovered

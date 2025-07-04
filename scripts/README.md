@@ -1,48 +1,73 @@
-# Custom Scripts Directory
+# Layered Scripts Directory 📁
 
-This directory is where you can add your own custom scripts that cmdy can execute.
+## 🏗️ **NEW: Layered Structure!**
 
-## 🎆 **NEW: Auto-Discovery!**
+### 📂 **examples/** 
+**Stock scripts provided by cmdy**
+- ⚠️ **Updated automatically** - Don't edit these!
+- 📋 Copy to `user/` directory to customize
+- 📚 Learning resources and templates
 
-cmdy now automatically discovers and adds executable scripts to your menu!
+### 👤 **user/**
+**Your custom scripts**  
+- 🔒 **Never overwritten** - Safe to edit
+- 🎆 **Auto-discovered** - Just drop files and go!
+- 🛠️ Your personal automation toolkit
 
-### Super Simple Usage:
+## 🚀 **Quick Start:**
 
-1. **Add your script** to this directory
-2. **Make it executable**: `chmod +x scripts/your-script.sh`  
-3. **Run cmdy** - your script appears automatically! ✨
-
-### Optional Manual Configuration:
-
-You can still manually configure scripts in `config.yaml` for custom display names:
-
-```yaml
-- display: "My Custom Script - Does something awesome"
-  commands:
-    linux: "./scripts/your-script.sh"
-    mac: "./scripts/your-script.sh"
+### For New Scripts:
+```bash
+# Add your script to user directory
+cp my-script.sh scripts/user/
+chmod +x scripts/user/my-script.sh
+# Run cmdy - appears automatically!
 ```
 
-**Manual entries take precedence over auto-discovered scripts.**
+### For Customizing Examples:
+```bash
+# Copy an example to customize
+cp scripts/examples/backup.sh scripts/user/my-backup.sh
+chmod +x scripts/user/my-backup.sh
+# Edit scripts/user/my-backup.sh safely
+```
 
-## Examples included:
+### Advanced Configuration:
+```yaml
+# Optional: Override display name in config.yaml
+- display: "My Custom Backup - Does awesome backups"
+  commands:
+    linux: "./scripts/user/my-backup.sh"
+    mac: "./scripts/user/my-backup.sh"
+```
 
-- `backup.sh` - Database backup script
-- `deploy.sh` - Application deployment
-- `cleanup.sh` - System cleanup tasks
-- `health-check.sh` - Detailed system health
+## 📚 **Example Scripts Included:**
 
-## 🔄 **Smart Deduplication**
+### In `examples/` directory:
+- `backup.sh` - Database backup with timestamps
+- `deploy.sh` - Application deployment to environments  
+- `cleanup.sh` - System cleanup and maintenance
+- `health-check.sh` - Comprehensive system health report
 
-- Auto-discovered scripts won't duplicate manual config entries
-- cmdy shows you what was found: `"Auto-discovered 4 scripts, deduplicated 2"`
-- Clean, organized menu with no duplicates
+## 🎨 **Menu Display:**
 
-## Tips:
+- **[example] script-name** - From examples/ directory
+- **[user] script-name** - From user/ directory  
+- **script-name** - From legacy scripts/ (backward compatibility)
 
-- **Just drop files and go** - No config needed for basic scripts
-- Scripts should be **cross-platform** when possible
-- Use **#!/bin/bash** or **#!/bin/sh** for shell scripts
-- Add **error handling** and **user feedback**
-- **Transparent**: cmdy tells you what scripts were found
-- File names become menu entries (extension removed)
+## 🔄 **Smart Features:**
+
+- **Auto-discovery** - Executable scripts appear automatically
+- **Smart deduplication** - No duplicate menu entries
+- **Clear ownership** - Always know what's yours vs examples
+- **Safe updates** - Your scripts never get overwritten
+- **Transparent feedback** - See what was discovered
+
+## 💡 **Pro Tips:**
+
+- **Start with examples** - Copy and modify rather than starting from scratch
+- **Use clear names** - File names become menu entries (minus extension)
+- **Make executable** - `chmod +x` or scripts won't appear
+- **Cross-platform** - Use `#!/bin/bash` for compatibility
+- **Add error handling** - Use `set -e` and provide user feedback
+- **Version control** - Keep your user/ scripts in git for backup

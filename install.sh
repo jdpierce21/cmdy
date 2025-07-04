@@ -196,10 +196,47 @@ install_cmdy() {
         echo -e "${BLUE}ℹ️  New default config saved as config.yaml.new${NC}"
     fi
     
-    # Always update scripts (they're examples, less likely to be customized)
-    cp -r scripts "$CONFIG_DIR/"
-    chmod +x "$CONFIG_DIR/scripts"/*.sh 2>/dev/null || true
-    echo -e "${GREEN}✓ Example scripts updated${NC}"
+    # Create layered script structure
+    echo "Setting up script directories..."
+    
+    # Create directory structure
+    mkdir -p "$CONFIG_DIR/scripts/examples"
+    mkdir -p "$CONFIG_DIR/scripts/user"
+    
+    # Always update example scripts
+    cp scripts/*.sh "$CONFIG_DIR/scripts/examples/" 2>/dev/null || true
+    chmod +x "$CONFIG_DIR/scripts/examples/"*.sh 2>/dev/null || true
+    
+    # Migrate existing user scripts if any
+    if [[ -d "$CONFIG_DIR/scripts" ]] && [[ ! -d "$CONFIG_DIR/scripts/examples" ]]; then
+        echo "Migrating existing scripts to user directory..."
+        find "$CONFIG_DIR/scripts" -name "*.sh" -maxdepth 1 -exec mv {} "$CONFIG_DIR/scripts/user/" \;
+    fi
+    
+    # Create helpful README
+    cat > "$CONFIG_DIR/scripts/README.md" << 'EOF'
+# Scripts Directory Structure
+
+## examples/
+Stock scripts provided by cmdy. These are updated automatically.
+Copy to user/ directory and modify as needed.
+
+**These files are overwritten during updates!**
+
+## user/
+Your custom scripts. These are never overwritten.
+Add your own scripts here or copy/modify from examples/.
+
+## Usage
+1. Browse examples: `ls ~/.config/cmdy/scripts/examples/`
+2. Copy to customize: `cp examples/backup.sh user/my-backup.sh`
+3. Make executable: `chmod +x user/my-backup.sh`
+4. Run cmdy - your script appears automatically!
+EOF
+    
+    echo -e "${GREEN}✓ Layered script structure created${NC}"
+    echo -e "${BLUE}ℹ️  Examples in scripts/examples/ (updated automatically)${NC}"
+    echo -e "${BLUE}ℹ️  Your scripts go in scripts/user/ (preserved forever)${NC}"
     
     # Cleanup
     cd "$HOME"
