@@ -18,34 +18,6 @@ REPO_RAW_URL="https://raw.githubusercontent.com/jdpierce21/cmdy/master"
 INSTALL_DIR="$HOME/.local/bin"
 CONFIG_DIR="$HOME/.config/cmdy"
 
-# Function to show logo
-show_logo() {
-    # Try to use oh-my-logo if available
-    if command -v npx &> /dev/null; then
-        echo
-        npx --yes oh-my-logo "cmdy" --filled --color nebula 2>/dev/null || fallback_logo
-        echo
-    else
-        fallback_logo
-    fi
-}
-
-# Fallback ASCII logo
-fallback_logo() {
-    echo -e "${BLUE}"
-    echo "  ██████╗ ███╗   ███╗ ██████╗  ██╗   ██╗"
-    echo " ██╔════╝ ████╗ ████║ ██╔══██╗ ╚██╗ ██╔╝"
-    echo " ██║      ██╔████╔██║ ██║  ██║  ╚████╔╝ "
-    echo " ██║      ██║╚██╔╝██║ ██║  ██║   ╚██╔╝  "
-    echo " ╚██████╗ ██║ ╚═╝ ██║ ██████╔╝    ██║   "
-    echo "  ╚═════╝ ╚═╝     ╚═╝ ╚═════╝     ╚═╝   "
-    echo -e "${NC}"
-}
-
-show_logo
-echo -e "${BLUE}🚀 Installing cmdy - Modern CLI Command Assistant${NC}"
-echo "Repository: $REPO_URL"
-echo
 
 # Function to detect OS
 detect_os() {
@@ -61,11 +33,9 @@ detect_os() {
 install_dependencies() {
     local os=$(detect_os)
     
-    echo -e "${YELLOW}📦 Checking dependencies...${NC}"
     
     # Check and install fzf
     if ! command -v fzf &> /dev/null; then
-        echo -e "${YELLOW}Installing fzf...${NC}"
         case $os in
             "linux")
                 if command -v apt &> /dev/null; then
@@ -95,14 +65,11 @@ install_dependencies() {
                 exit 1
                 ;;
         esac
-        echo -e "${GREEN}✓ fzf installed${NC}"
     else
-        echo -e "${GREEN}✓ fzf already installed${NC}"
     fi
     
     # Check and install Go (for building from source)
     if ! command -v go &> /dev/null; then
-        echo -e "${YELLOW}Installing Go...${NC}"
         case $os in
             "linux")
                 if command -v apt &> /dev/null; then
@@ -132,44 +99,36 @@ install_dependencies() {
                 exit 1
                 ;;
         esac
-        echo -e "${GREEN}✓ Go installed${NC}"
     else
-        echo -e "${GREEN}✓ Go already installed${NC}"
     fi
 }
 
 # Function to create directories
 create_directories() {
-    echo -e "${YELLOW}📁 Creating directories...${NC}"
     mkdir -p "$INSTALL_DIR"
     mkdir -p "$CONFIG_DIR"
-    echo -e "${GREEN}✓ Directories created${NC}"
 }
 
 # Function to download and build cmdy
 install_cmdy() {
-    echo -e "${YELLOW}🔨 Building cmdy from source...${NC}"
     
     # Create temporary directory
     TEMP_DIR=$(mktemp -d)
     cd "$TEMP_DIR"
     
     # Clone repository
-    echo "Cloning repository..."
     git clone "$REPO_URL.git" . || {
         echo -e "${RED}❌ Failed to clone repository${NC}"
         exit 1
     }
     
     # Build binary
-    echo "Building binary..."
     go build -o cmdy main.go || {
         echo -e "${RED}❌ Failed to build cmdy${NC}"
         exit 1
     }
     
     # Install binary (rename to .bin for wrapper)
-    echo "Installing binary to $INSTALL_DIR..."
     
     if [[ -f "cmdy" ]]; then
         mv cmdy "$INSTALL_DIR/cmdy.bin" || {
@@ -183,21 +142,15 @@ install_cmdy() {
     fi
     
     # Copy config and scripts
-    echo "Installing configuration..."
     
     # Only copy config if it doesn't exist (preserve user customizations)
     if [[ ! -f "$CONFIG_DIR/config.yaml" ]]; then
         cp config.yaml "$CONFIG_DIR/"
-        echo -e "${GREEN}✓ Default config installed${NC}"
     else
-        echo -e "${YELLOW}⚠️  Existing config preserved (not overwritten)${NC}"
-        # Optionally create a .new version for reference
         cp config.yaml "$CONFIG_DIR/config.yaml.new"
-        echo -e "${BLUE}ℹ️  New default config saved as config.yaml.new${NC}"
     fi
     
     # Create layered script structure
-    echo "Setting up script directories..."
     
     # Create directory structure
     mkdir -p "$CONFIG_DIR/scripts/examples"
@@ -209,7 +162,6 @@ install_cmdy() {
     
     # Migrate existing user scripts if any
     if [[ -d "$CONFIG_DIR/scripts" ]] && [[ ! -d "$CONFIG_DIR/scripts/examples" ]]; then
-        echo "Migrating existing scripts to user directory..."
         find "$CONFIG_DIR/scripts" -name "*.sh" -maxdepth 1 -exec mv {} "$CONFIG_DIR/scripts/user/" \;
     fi
     
@@ -234,20 +186,15 @@ Add your own scripts here or copy/modify from examples/.
 4. Run cmdy - your script appears automatically!
 EOF
     
-    echo -e "${GREEN}✓ Layered script structure created${NC}"
-    echo -e "${BLUE}ℹ️  Examples in scripts/examples/ (updated automatically)${NC}"
-    echo -e "${BLUE}ℹ️  Your scripts go in scripts/user/ (preserved forever)${NC}"
     
     # Cleanup
     cd "$HOME"
     rm -rf "$TEMP_DIR"
     
-    echo -e "${GREEN}✓ cmdy installed successfully${NC}"
 }
 
 # Function to setup PATH
 setup_path() {
-    echo -e "${YELLOW}🔧 Setting up PATH...${NC}"
     
     # Add to PATH in shell profile
     SHELL_RC=""
@@ -262,9 +209,7 @@ setup_path() {
             echo "" >> "$SHELL_RC"
             echo "# cmdy installer" >> "$SHELL_RC"
             echo "export PATH=\"$INSTALL_DIR:\$PATH\"" >> "$SHELL_RC"
-            echo -e "${GREEN}✓ Added $INSTALL_DIR to PATH in $SHELL_RC${NC}"
         else
-            echo -e "${GREEN}✓ PATH already configured${NC}"
         fi
     fi
     
@@ -274,7 +219,6 @@ setup_path() {
 
 # Function to create wrapper script
 create_wrapper() {
-    echo -e "${YELLOW}📝 Creating wrapper script...${NC}"
     
     # Create wrapper script (binary already renamed to .bin)
     cat > "$INSTALL_DIR/cmdy" << 'EOF'
@@ -293,7 +237,6 @@ EOF
     # Check if wrapper was created successfully
     if [[ -f "$INSTALL_DIR/cmdy" ]]; then
         chmod +x "$INSTALL_DIR/cmdy"
-        echo -e "${GREEN}✓ Wrapper script created${NC}"
     else
         echo -e "${RED}❌ Failed to create wrapper script${NC}"
         exit 1
@@ -302,23 +245,17 @@ EOF
 
 # Function to verify installation
 verify_installation() {
-    echo -e "${YELLOW}🔍 Verifying installation...${NC}"
     
     if command -v cmdy &> /dev/null; then
-        echo -e "${GREEN}✓ cmdy is in PATH${NC}"
     else
-        echo -e "${YELLOW}⚠️  cmdy not in PATH. You may need to restart your shell or run:${NC}"
-        echo "  export PATH=\"$INSTALL_DIR:\$PATH\""
     fi
     
     if [[ -f "$CONFIG_DIR/config.yaml" ]]; then
-        echo -e "${GREEN}✓ Configuration installed${NC}"
     else
         echo -e "${RED}❌ Configuration not found${NC}"
     fi
     
     if [[ -d "$CONFIG_DIR/scripts" ]]; then
-        echo -e "${GREEN}✓ Example scripts installed${NC}"
     else
         echo -e "${RED}❌ Scripts not found${NC}"
     fi
@@ -326,7 +263,6 @@ verify_installation() {
 
 # Main installation flow
 main() {
-    echo -e "${BLUE}Starting installation...${NC}"
     
     install_dependencies
     create_directories
@@ -335,30 +271,7 @@ main() {
     setup_path
     verify_installation
     
-    echo
-    echo -e "${GREEN}🎉 Installation completed successfully!${NC}"
-    echo
-    echo -e "${BLUE}Usage:${NC}"
-    echo "  cmdy                    # Run the interactive menu"
-    echo "  cmdy --help             # Show help"
-    echo
-    echo -e "${BLUE}Configuration:${NC}"
-    echo "  Config: $CONFIG_DIR/config.yaml"
-    echo "  Scripts: $CONFIG_DIR/scripts/"
-    echo
-    echo -e "${BLUE}Next steps:${NC}"
-    echo "1. Restart your shell or run one of these:"
-    echo "   source ~/.bashrc    # For bash"
-    echo "   source ~/.zshrc     # For zsh"
-    echo "   export PATH=\"$INSTALL_DIR:\$PATH\"  # For current session"
-    echo "2. Run 'cmdy' to start using your command assistant!"
-    echo "3. Customize $CONFIG_DIR/config.yaml to add your own commands"
-    echo "4. Add custom scripts to $CONFIG_DIR/scripts/"
-    echo
-    echo -e "${BLUE}If 'cmdy' command not found:${NC}"
-    echo "  $INSTALL_DIR/cmdy    # Run directly"
-    echo
-    echo -e "${YELLOW}⭐ Star the repo: $REPO_URL${NC}"
+    echo "✓ Installed"
 }
 
 # Run main function

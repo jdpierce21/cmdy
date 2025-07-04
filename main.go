@@ -50,9 +50,7 @@ func discoverScripts() []MenuOption {
 		discovered = append(discovered, scripts...)
 	}
 	
-	if len(discovered) > 0 {
-		fmt.Printf("Auto-discovered %d executable scripts\n", len(discovered))
-	} else {
+	if len(discovered) == 0 {
 		fmt.Println("No executable scripts found in scripts/ directories")
 		fmt.Println("Add scripts to scripts/user/ or scripts/examples/")
 	}
@@ -135,9 +133,6 @@ func mergeOptions(config []MenuOption, discovered []MenuOption) []MenuOption {
 		}
 	}
 	
-	if deduped > 0 {
-		fmt.Printf("Deduplicated %d scripts (already in config)\n", deduped)
-	}
 	
 	return merged
 }
@@ -172,44 +167,29 @@ func showUsage() {
 }
 
 func buildCmdy() {
-	fmt.Println("Building cmdy...")
-	
 	// Check if Go is available
 	if !commandExists("go") {
 		fmt.Println("Error: Go compiler not found")
-		fmt.Println("")
-		fmt.Println("Solutions:")
-		fmt.Println("1. Install Go: https://golang.org/doc/install")
-		fmt.Println("2. Ubuntu/Debian: sudo apt install golang-go")
-		fmt.Println("3. macOS: brew install go")
+		fmt.Println("Install Go: https://golang.org/doc/install")
 		os.Exit(1)
 	}
 	
 	// Check if main.go exists
 	if _, err := os.Stat("main.go"); err != nil {
 		fmt.Printf("Error: main.go not found (%v)\n", err)
-		fmt.Println("Make sure you're in the cmdy source directory")
 		os.Exit(1)
 	}
 	
 	cmd := exec.Command("go", "build", "-ldflags=-s -w", "-o", "cmdy", "main.go")
-	cmd.Stdout = os.Stdout
+	cmd.Stdout = nil
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		fmt.Printf("Build failed: %v\n", err)
-		fmt.Println("")
-		fmt.Println("Common solutions:")
-		fmt.Println("1. Check for syntax errors in main.go")
-		fmt.Println("2. Run: go mod tidy")
-		fmt.Println("3. Check Go version: go version")
 		os.Exit(1)
 	}
-	fmt.Println("✓ Build completed: ./cmdy")
 }
 
 func installCmdy() {
-	fmt.Println("Installing cmdy globally...")
-	
 	// Build first
 	buildCmdy()
 	
@@ -260,9 +240,6 @@ func installCmdy() {
 		os.Remove(tempPath)
 		os.Exit(1)
 	}
-	
-	fmt.Printf("✓ Installed to %s\n", installPath)
-	fmt.Println("Make sure ~/.local/bin is in your PATH")
 }
 
 func devWorkflow() {
@@ -270,8 +247,6 @@ func devWorkflow() {
 	if len(os.Args) > 2 {
 		msg = strings.Join(os.Args[2:], " ")
 	}
-	
-	fmt.Println("Running dev workflow...")
 	
 	// Check if there are any changes first
 	cmd := exec.Command("git", "status", "--porcelain")
@@ -287,7 +262,6 @@ func devWorkflow() {
 	}
 	
 	// Git add
-	fmt.Println("Staging changes...")
 	cmd = exec.Command("git", "add", ".")
 	if err := cmd.Run(); err != nil {
 		fmt.Printf("Git add failed: %v\n", err)
@@ -295,18 +269,16 @@ func devWorkflow() {
 	}
 	
 	// Git commit
-	fmt.Printf("Committing: %s\n", msg)
 	cmd = exec.Command("git", "commit", "-m", msg)
-	cmd.Stdout = os.Stdout
+	cmd.Stdout = nil
 	if err := cmd.Run(); err != nil {
 		fmt.Printf("Git commit failed: %v\n", err)
 		os.Exit(1)
 	}
 	
 	// Git push
-	fmt.Println("Pushing to origin...")
 	cmd = exec.Command("git", "push", "origin", "master")
-	cmd.Stdout = os.Stdout
+	cmd.Stdout = nil
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		fmt.Printf("Git push failed: %v\n", err)
@@ -316,17 +288,13 @@ func devWorkflow() {
 	// Install
 	installCmdy()
 	
-	fmt.Println("✓ Dev workflow completed!")
+	fmt.Println("✓ Complete")
 }
 
 func updateCmdy() {
-	fmt.Println("Updating cmdy...")
-	
 	// Find the cmdy source directory
 	sourceDir := findCmdySource()
 	if sourceDir == "" {
-		fmt.Println("No source repository found - using installer method...")
-		fmt.Println("")
 		updateViaInstaller()
 		return
 	}
@@ -337,12 +305,11 @@ func updateCmdy() {
 	os.Chdir(sourceDir)
 	
 	// Git pull
-	fmt.Printf("Pulling latest changes in %s...\n", sourceDir)
 	cmd := exec.Command("git", "pull", "origin", "master")
-	cmd.Stdout = os.Stdout
+	cmd.Stdout = nil
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		fmt.Printf("Git pull failed: %v\n", err)
+		fmt.Printf("Update failed: %v\n", err)
 		os.Exit(1)
 	}
 	
@@ -352,30 +319,23 @@ func updateCmdy() {
 	// Build and install
 	installCmdy()
 	
-	fmt.Println("✓ Update completed!")
+	fmt.Println("✓ Updated")
 }
 
 func updateViaInstaller() {
-	fmt.Println("📦 Downloading latest cmdy installer...")
+	fmt.Println("Updating...")
 	
 	// Download and execute installer
 	cmd := exec.Command("bash", "-c", "curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash")
-	cmd.Stdout = os.Stdout
+	cmd.Stdout = nil
 	cmd.Stderr = os.Stderr
 	
 	if err := cmd.Run(); err != nil {
-		fmt.Printf("Installer failed: %v\n", err)
-		fmt.Println("")
-		fmt.Println("Manual options:")
-		fmt.Println("1. Check internet connection")
-		fmt.Println("2. Run manually: curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash")
-		fmt.Println("3. Clone repository: git clone https://github.com/jdpierce21/cmdy.git")
+		fmt.Printf("Update failed: %v\n", err)
 		os.Exit(1)
 	}
 	
-	fmt.Println("✓ Update completed via installer!")
-	fmt.Println("🔒 Your config and user scripts preserved")
-	fmt.Println("🎆 Latest examples and features installed")
+	fmt.Println("✓ Updated")
 }
 
 func findCmdySource() string {
@@ -431,10 +391,7 @@ func preserveUserConfig() {
 		if err := cmd.Run(); err != nil {
 			// Configs differ, backup the new one
 			backupPath := filepath.Join(homeDir, ".config", "cmdy", "config.yaml.new")
-			if err := copyFile(newConfigPath, backupPath); err == nil {
-				fmt.Println("⚠️  Config updated - new default saved as config.yaml.new")
-				fmt.Println("🔒 Your custom config preserved")
-			}
+			copyFile(newConfigPath, backupPath)
 		}
 	}
 }
@@ -512,7 +469,6 @@ func findEditor() (string, error) {
 }
 
 func runInteractiveMenu() {
-	fmt.Println("Loading cmdy configuration...")
 	
 	data, err := os.ReadFile("config.yaml")
 	if err != nil {
@@ -534,7 +490,6 @@ func runInteractiveMenu() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Loaded %d configured menu options\n", len(config.MenuOptions))
 	
 	// Auto-discover scripts and merge with config
 	discovered := discoverScripts()
@@ -550,8 +505,6 @@ func runInteractiveMenu() {
 		os.Exit(1)
 	}
 	
-	fmt.Printf("Total menu options: %d\n", len(allOptions))
-	fmt.Println("")
 
 	currentOS := runtime.GOOS
 	if currentOS == "darwin" {
