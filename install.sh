@@ -207,9 +207,12 @@ install_cmdy() {
         }
     fi
     
-    # Build binary with consistent optimization
+    # Build binary with consistent optimization and version embedding
     echo -e "${YELLOW}🔨 Building optimized binary...${NC}"
-    go build -ldflags="-s -w" -o cmdy > /dev/null 2>&1 || {
+    local current_hash=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
+    local build_date=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    go build -ldflags="-s -w -X main.BuildVersion=$current_hash -X main.BuildDate=$build_date" -o cmdy > /dev/null 2>&1 || {
         echo -e "${RED}❌ Build failed${NC}"
         [[ "$cleanup_needed" == true ]] && rm -rf "$TEMP_DIR"
         exit 1
@@ -224,6 +227,18 @@ install_cmdy() {
         }
         chmod +x "$INSTALL_DIR/cmdy.bin"
         echo -e "${GREEN}✓ Binary installed${NC}"
+        
+        # Save version information
+        echo -e "${YELLOW}📋 Saving version info...${NC}"
+        mkdir -p "$CONFIG_DIR"
+        cat > "$CONFIG_DIR/version.json" << EOF
+{
+  "build_hash": "$current_hash",
+  "build_date": "$build_date",
+  "install_date": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+}
+EOF
+        echo -e "${GREEN}✓ Version info saved${NC}"
     else
         echo -e "${RED}❌ Binary not found after build${NC}"
         [[ "$cleanup_needed" == true ]] && rm -rf "$TEMP_DIR"
@@ -400,14 +415,6 @@ main() {
 
         echo
         echo -e "🎉🎉🎉 Installation completed successfully! 🎉🎉🎉"
-        echo
-        echo -e "${BLUE}Usage:${NC}"
-        echo "  cmdy                    # Run the interactive menu"
-        echo "  cmdy --help             # Show help"
-        echo
-        echo -e "${BLUE}Customization files:${NC}"
-        echo "  Config: $CONFIG_DIR/config.yaml"
-        echo "  Scripts: $CONFIG_DIR/scripts/"
         echo
         echo -e "${BLUE}Next steps:${NC}"
         echo "1. Run 'cmdy' to start using your command assistant!"

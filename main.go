@@ -1,19 +1,38 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v3"
+)
+
+// Build version variables (set at build time via -ldflags)
+var (
+	BuildVersion string = "unknown"
+	BuildDate    string = "unknown"
 )
 
 type MenuOption struct {
 	Display  string            `yaml:"display"`
 	Commands map[string]string `yaml:"commands"`
+}
+
+type VersionInfo struct {
+	BuildHash   string    `json:"build_hash"`
+	BuildDate   string    `json:"build_date"`
+	InstallDate time.Time `json:"install_date"`
+}
+
+type GitHubCommit struct {
+	SHA string `json:"sha"`
 }
 
 
@@ -155,14 +174,15 @@ func showUsage() {
 	fmt.Println(AppTitle)
 	fmt.Println("")
 	fmt.Println("Usage:")
-	fmt.Println("  cmdy           Run interactive menu")
-	fmt.Println("  cmdy build     Build the binary (requires source)")
-	fmt.Println("  cmdy install   Install/update globally (requires source)")
-	fmt.Println("  cmdy dev [msg] Commit, push, and install (dev workflow)")
-	fmt.Println("  cmdy update    Update to latest version (works for all users)")
-	fmt.Println("  cmdy version   Show current version")
-	fmt.Println("  cmdy config    Edit config file")
-	fmt.Println("  cmdy help      Show this help")
+	fmt.Println("  cmdy               Run interactive menu")
+	fmt.Println("  cmdy build         Build the binary (requires source)")
+	fmt.Println("  cmdy install       Install/update globally (requires source)")
+	fmt.Println("  cmdy dev [msg]     Commit, push, and install (dev workflow)")
+	fmt.Println("  cmdy update        Smart update (checks version first)")
+	fmt.Println("  cmdy update --force Force update (skip version check)")
+	fmt.Println("  cmdy version       Show current version")
+	fmt.Println("  cmdy config        Edit config file")
+	fmt.Println("  cmdy help          Show this help")
 }
 
 func buildCmdy() {
@@ -217,7 +237,36 @@ func devWorkflow() {
 }
 
 func updateCmdy() {
-	// Use enhanced installer in update mode with smart source detection
+	forceUpdate := len(os.Args) > 2 && os.Args[2] == "--force"
+	
+	if !forceUpdate {
+		// Quick version check
+		fmt.Println("🔍 Checking for updates...")
+		
+		// Get current installed version
+		currentVersion := ""
+		if versionInfo := getInstalledVersionInfo(); versionInfo != nil {
+			currentVersion = versionInfo.BuildHash
+		} else if BuildVersion != "unknown" {
+			currentVersion = BuildVersion
+		}
+		
+		// Get latest remote version
+		latestVersion, err := getLatestRemoteVersion()
+		if err != nil {
+			fmt.Printf("⚠️  Could not check for updates: %v\n", err)
+			fmt.Println("🔄 Proceeding with update anyway...")
+		} else if currentVersion != "" && currentVersion == latestVersion {
+			fmt.Printf("✓ Already up-to-date (build: %s)\n", currentVersion[:7])
+			return
+		} else if currentVersion != "" && latestVersion != "" {
+			fmt.Printf("🔄 New version available (%s → %s)\n", currentVersion[:7], latestVersion[:7])
+		}
+	} else {
+		fmt.Println("🔄 Force update requested...")
+	}
+	
+	// Proceed with full update
 	cmd := exec.Command("bash", "-c", "curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash -s update auto")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -229,14 +278,79 @@ func updateCmdy() {
 
 
 
-func showVersion() {
-	cmd := exec.Command("git", "rev-parse", "--short", "HEAD")
-	output, err := cmd.Output()
+// Version tracking functions
+func getVersionFilePath() string {
+	return filepath.Join(ConfigDir, "version.json")
+}
+
+func getInstalledVersionInfo() *VersionInfo {
+	data, err := os.ReadFile(getVersionFilePath())
 	if err != nil {
-		fmt.Println(VersionUnknown)
-		return
+		return nil
 	}
-	fmt.Printf("cmdy version: %s\n", strings.TrimSpace(string(output)))
+	
+	var info VersionInfo
+	if err := json.Unmarshal(data, &info); err != nil {
+		return nil
+	}
+	
+	return &info
+}
+
+func saveVersionInfo(buildHash, buildDate string) error {
+	info := VersionInfo{
+		BuildHash:   buildHash,
+		BuildDate:   buildDate,
+		InstallDate: time.Now(),
+	}
+	
+	data, err := json.MarshalIndent(info, "", "  ")
+	if err != nil {
+		return err
+	}
+	
+	// Ensure config directory exists
+	os.MkdirAll(filepath.Dir(getVersionFilePath()), 0755)
+	
+	return os.WriteFile(getVersionFilePath(), data, 0644)
+}
+
+func getLatestRemoteVersion() (string, error) {
+	resp, err := http.Get("https://api.github.com/repos/jdpierce21/cmdy/commits/master")
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	
+	var commit GitHubCommit
+	if err := json.NewDecoder(resp.Body).Decode(&commit); err != nil {
+		return "", err
+	}
+	
+	return commit.SHA, nil
+}
+
+func showVersion() {
+	if BuildVersion != "unknown" {
+		fmt.Printf("cmdy version: %s\n", BuildVersion[:7]) // Show short hash
+		if BuildDate != "unknown" {
+			fmt.Printf("Built: %s\n", BuildDate)
+		}
+		
+		// Show installation info if available
+		if versionInfo := getInstalledVersionInfo(); versionInfo != nil {
+			fmt.Printf("Installed: %s\n", versionInfo.InstallDate.Format("2006-01-02 15:04:05"))
+		}
+	} else {
+		// Fallback to git if available
+		cmd := exec.Command("git", "rev-parse", "--short", "HEAD")
+		output, err := cmd.Output()
+		if err != nil {
+			fmt.Println(VersionUnknown)
+			return
+		}
+		fmt.Printf("cmdy version: %s (from git)\n", strings.TrimSpace(string(output)))
+	}
 }
 
 func editConfig() {
