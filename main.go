@@ -305,17 +305,6 @@ func updateCmdy() {
 }
 
 func updateViaInstaller() {
-	// Show branding
-	fmt.Println("\033[0;34m")
-	fmt.Println("  ██████╗ ███╗   ███╗ ██████╗  ██╗   ██╗")
-	fmt.Println(" ██╔════╝ ████╗ ████║ ██╔══██╗ ╚██╗ ██╔╝")
-	fmt.Println(" ██║      ██╔████╔██║ ██║  ██║  ╚████╔╝ ")
-	fmt.Println(" ██║      ██║╚██╔╝██║ ██║  ██║   ╚██╔╝  ")
-	fmt.Println(" ╚██████╗ ██║ ╚═╝ ██║ ██████╔╝    ██║   ")
-	fmt.Println("  ╚═════╝ ╚═╝     ╚═╝ ╚═════╝     ╚═╝   ")
-	fmt.Println("\033[0m")
-	fmt.Println("\033[0;34m🔄 Updating cmdy\033[0m")
-	
 	// Download and execute installer
 	cmd := exec.Command("bash", "-c", "curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash")
 	cmd.Stdout = nil
