@@ -1,1 +1,1 @@
-test file for cmdy dev workflow - final test
+test file for renamed git-commit-push script

@@ -247,8 +247,8 @@ func devWorkflow() {
 		msg = strings.Join(os.Args[2:], " ")
 	}
 	
-	// Run git workflow script
-	cmd := exec.Command("./dev-workflow.sh", msg, GitRemote, GitBranch)
+	// Run git commit and push script
+	cmd := exec.Command("./git-commit-push.sh", msg, GitRemote, GitBranch)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
