@@ -120,15 +120,6 @@ var OSMappings = map[string]string{
 	"darwin": "mac",
 }
 
-// Search Locations for cmdy source (relative to home directory)
-var SourceSearchLocations = []string{
-	getEnvOrUseDefault("CMDY_SEARCH_LOC1", "cmdy"),
-	getEnvOrUseDefault("CMDY_SEARCH_LOC2", "projects/cmdy"),
-	getEnvOrUseDefault("CMDY_SEARCH_LOC3", "src/cmdy"),
-	getEnvOrUseDefault("CMDY_SEARCH_LOC4", "dev/cmdy"),
-	getEnvOrUseDefault("CMDY_SEARCH_LOC5", "code/cmdy"),
-	getEnvOrUseDefault("CMDY_SEARCH_LOC6", "scripts/cmdy"),
-}
 
 // Editor fallback list
 var EditorCandidates = []string{

@@ -1,7 +1,9 @@
 #!/bin/bash
 
-# cmdy installer script
-# Usage: curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash
+# cmdy smart installer/updater script
+# Usage: 
+#   curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash
+#   ./install.sh [install|update] [git|download|auto]
 
 set -e
 
@@ -18,7 +20,16 @@ REPO_RAW_URL="https://raw.githubusercontent.com/jdpierce21/cmdy/master"
 INSTALL_DIR="$HOME/.local/bin"
 CONFIG_DIR="$HOME/.config/cmdy"
 
-echo -e "\n${BLUE}🚀 Installing cmdy ... ${NC}\n"
+# Mode detection
+MODE="${1:-install}"
+SOURCE_METHOD="${2:-auto}"
+
+# Smart messaging based on mode
+if [[ "$MODE" == "update" ]]; then
+    echo -e "\n${BLUE}🔄 Updating cmdy ... ${NC}\n"
+else
+    echo -e "\n${BLUE}🚀 Installing cmdy ... ${NC}\n"
+fi
 
 # Function to detect OS
 detect_os() {
@@ -27,6 +38,54 @@ detect_os() {
         Darwin*)    echo "mac";;
         CYGWIN*|MINGW*|MSYS*) echo "windows";;
         *)          echo "unknown";;
+    esac
+}
+
+# Function to find existing cmdy source
+find_cmdy_source() {
+    # Check current directory first
+    if [[ -d ".git" && -f "main.go" && -f "config.yaml" ]]; then
+        pwd
+        return 0
+    fi
+    
+    # Check common locations
+    local locations=(
+        "$HOME/cmdy"
+        "$HOME/projects/cmdy"
+        "$HOME/src/cmdy"
+        "$HOME/dev/cmdy"
+        "$HOME/code/cmdy"
+        "$HOME/scripts/cmdy"
+    )
+    
+    for location in "${locations[@]}"; do
+        if [[ -d "$location/.git" && -f "$location/main.go" && -f "$location/config.yaml" ]]; then
+            echo "$location"
+            return 0
+        fi
+    done
+    
+    # Not found
+    return 1
+}
+
+# Function to determine source method
+determine_source_method() {
+    case "$SOURCE_METHOD" in
+        "git"|"download")
+            echo "$SOURCE_METHOD"
+            ;;
+        "auto")
+            if find_cmdy_source >/dev/null 2>&1; then
+                echo "git"
+            else
+                echo "download"
+            fi
+            ;;
+        *)
+            echo "download"
+            ;;
     esac
 }
 
@@ -104,41 +163,113 @@ create_directories() {
     echo -e "📁 Creating directories... ✅"
 }
 
-# Function to download and build cmdy
+# Function to build and install cmdy from source
 install_cmdy() {
+    local source_method=$(determine_source_method)
     local status="🔨 Building cmdy from source..."
-    # Create temporary directory
-    TEMP_DIR=$(mktemp -d)
-    cd "$TEMP_DIR"
-    # Clone repository
-    git clone "$REPO_URL.git" . > /dev/null 2>&1 || {
-        echo -e "${RED}${status} ❌ Failed to build or install cmdy${NC}"
+    local source_dir=""
+    local cleanup_needed=false
+    
+    echo -e "${YELLOW}${status}${NC}"
+    
+    if [[ "$source_method" == "git" ]]; then
+        # Use existing git repository
+        source_dir=$(find_cmdy_source)
+        if [[ -z "$source_dir" ]]; then
+            echo -e "${RED}❌ Git source not found, falling back to download${NC}"
+            source_method="download"
+        else
+            echo -e "${YELLOW}📁 Using existing source: $source_dir${NC}"
+            cd "$source_dir"
+            
+            # Update if this is an update mode
+            if [[ "$MODE" == "update" ]]; then
+                echo -e "${YELLOW}🔄 Pulling latest changes...${NC}"
+                git pull origin master > /dev/null 2>&1 || {
+                    echo -e "${RED}❌ Git pull failed${NC}"
+                    exit 1
+                }
+            fi
+        fi
+    fi
+    
+    if [[ "$source_method" == "download" ]]; then
+        # Download fresh source
+        TEMP_DIR=$(mktemp -d)
+        source_dir="$TEMP_DIR"
+        cleanup_needed=true
+        cd "$TEMP_DIR"
+        
+        echo -e "${YELLOW}📥 Downloading source...${NC}"
+        git clone "$REPO_URL.git" . > /dev/null 2>&1 || {
+            echo -e "${RED}❌ Failed to download source${NC}"
+            exit 1
+        }
+    fi
+    
+    # Build binary with consistent optimization
+    echo -e "${YELLOW}🔨 Building optimized binary...${NC}"
+    go build -ldflags="-s -w" -o cmdy > /dev/null 2>&1 || {
+        echo -e "${RED}❌ Build failed${NC}"
+        [[ "$cleanup_needed" == true ]] && rm -rf "$TEMP_DIR"
         exit 1
     }
-    # Build binary
-    go build -o cmdy > /dev/null 2>&1 || {
-        echo -e "${RED}${status} ❌ Failed to build or install cmdy${NC}"
-        exit 1
-    }
-    # Install binary (rename to .bin for wrapper)
+    
+    # Install binary (always use wrapper architecture)
     if [[ -f "cmdy" ]]; then
         mv cmdy "$INSTALL_DIR/cmdy.bin" > /dev/null 2>&1 || {
-            echo -e "${RED}${status} ❌ Failed to build or install cmdy${NC}"
+            echo -e "${RED}❌ Failed to install binary${NC}"
+            [[ "$cleanup_needed" == true ]] && rm -rf "$TEMP_DIR"
             exit 1
         }
         chmod +x "$INSTALL_DIR/cmdy.bin"
+        echo -e "${GREEN}✓ Binary installed${NC}"
     else
-        echo -e "${RED}${status} ❌ Failed to build or install cmdy${NC}"
+        echo -e "${RED}❌ Binary not found after build${NC}"
+        [[ "$cleanup_needed" == true ]] && rm -rf "$TEMP_DIR"
         exit 1
     fi
-    # Copy config and scripts
-    cp config.yaml "$CONFIG_DIR/" > /dev/null 2>&1
-    cp -r scripts "$CONFIG_DIR/" > /dev/null 2>&1
-    chmod +x "$CONFIG_DIR/scripts"/*.sh 2>/dev/null || true
-    # Cleanup
-    cd "$HOME"
-    rm -rf "$TEMP_DIR"
-    echo -e "🔨 Building cmdy from source... ✅${NC}"
+    
+    # Handle config based on mode
+    if [[ "$MODE" == "install" ]]; then
+        # Fresh install - copy everything
+        echo -e "${YELLOW}📋 Installing configuration...${NC}"
+        cp config.yaml "$CONFIG_DIR/" > /dev/null 2>&1
+        cp -r scripts "$CONFIG_DIR/" > /dev/null 2>&1
+        chmod +x "$CONFIG_DIR/scripts"/*.sh 2>/dev/null || true
+        echo -e "${GREEN}✓ Configuration installed${NC}"
+    elif [[ "$MODE" == "update" ]]; then
+        # Update mode - preserve user config, backup new defaults
+        echo -e "${YELLOW}📋 Preserving user configuration...${NC}"
+        if [[ -f "$CONFIG_DIR/config.yaml" ]]; then
+            # Backup new config as reference
+            cp config.yaml "$CONFIG_DIR/config.yaml.new" > /dev/null 2>&1
+            echo -e "${GREEN}✓ User config preserved, new defaults saved as config.yaml.new${NC}"
+        else
+            # No existing config, install fresh
+            cp config.yaml "$CONFIG_DIR/" > /dev/null 2>&1
+            echo -e "${GREEN}✓ Configuration installed${NC}"
+        fi
+        
+        # Update example scripts but preserve user scripts
+        if [[ -d "$CONFIG_DIR/scripts" ]]; then
+            cp -r scripts/examples "$CONFIG_DIR/scripts/" > /dev/null 2>&1
+            chmod +x "$CONFIG_DIR/scripts/examples"/*.sh 2>/dev/null || true
+            echo -e "${GREEN}✓ Example scripts updated${NC}"
+        else
+            cp -r scripts "$CONFIG_DIR/" > /dev/null 2>&1
+            chmod +x "$CONFIG_DIR/scripts"/*.sh 2>/dev/null || true
+            echo -e "${GREEN}✓ Scripts installed${NC}"
+        fi
+    fi
+    
+    # Cleanup if needed
+    if [[ "$cleanup_needed" == true ]]; then
+        cd "$HOME"
+        rm -rf "$TEMP_DIR"
+    fi
+    
+    echo -e "${GREEN}✅ Build and install completed${NC}"
 }
 
 # Function to setup PATH
@@ -256,35 +387,65 @@ verify_installation() {
     fi
 }
 
-# Main installation flow
+# Main installation/update flow
 main() {
-    install_dependencies
-    create_directories
-    install_cmdy
-    create_wrapper
-    setup_path
-    verify_installation
+    if [[ "$MODE" == "install" ]]; then
+        # Full installation flow
+        install_dependencies
+        create_directories
+        install_cmdy
+        create_wrapper
+        setup_path
+        verify_installation
 
-    echo
-    echo -e "🎉🎉🎉 Installation completed successfully! 🎉🎉🎉"
-    echo
-    echo -e "${BLUE}Usage:${NC}"
-    echo "  cmdy                    # Run the interactive menu"
-    echo "  cmdy --help             # Show help"
-    echo
-    echo -e "${BLUE}Customization files:${NC}"
-    echo "  Config: $CONFIG_DIR/config.yaml"
-    echo "  Scripts: $CONFIG_DIR/scripts/"
-    echo
-    echo -e "${BLUE}Next steps:${NC}"
-    echo "1. Run 'cmdy' to start using your command assistant!"
-    echo "2. Customize $CONFIG_DIR/config.yaml to add your own commands"
-    echo "3. Add custom scripts to $CONFIG_DIR/scripts/"
-    echo
-    echo -e "${BLUE}If 'cmdy' command not found:${NC}"
-    echo "  $INSTALL_DIR/cmdy    # Run directly"
-    echo
-    echo -e "${YELLOW}⭐ Star the repo: $REPO_URL${NC}"
+        echo
+        echo -e "🎉🎉🎉 Installation completed successfully! 🎉🎉🎉"
+        echo
+        echo -e "${BLUE}Usage:${NC}"
+        echo "  cmdy                    # Run the interactive menu"
+        echo "  cmdy --help             # Show help"
+        echo
+        echo -e "${BLUE}Customization files:${NC}"
+        echo "  Config: $CONFIG_DIR/config.yaml"
+        echo "  Scripts: $CONFIG_DIR/scripts/"
+        echo
+        echo -e "${BLUE}Next steps:${NC}"
+        echo "1. Run 'cmdy' to start using your command assistant!"
+        echo "2. Customize $CONFIG_DIR/config.yaml to add your own commands"
+        echo "3. Add custom scripts to $CONFIG_DIR/scripts/"
+        echo
+        echo -e "${BLUE}If 'cmdy' command not found:${NC}"
+        echo "  $INSTALL_DIR/cmdy    # Run directly"
+        echo
+        echo -e "${YELLOW}⭐ Star the repo: $REPO_URL${NC}"
+        
+    elif [[ "$MODE" == "update" ]]; then
+        # Streamlined update flow
+        install_dependencies  # Ensure deps are current
+        create_directories    # Ensure dirs exist
+        install_cmdy         # Smart source detection & config preservation
+        verify_installation  # Ensure it works
+        
+        # Wrapper already exists, no PATH setup needed
+        echo
+        echo -e "${GREEN}✓ Updated successfully!${NC}"
+        echo
+        echo -e "${BLUE}What was updated:${NC}"
+        echo "  Binary: $INSTALL_DIR/cmdy.bin"
+        echo "  Examples: $CONFIG_DIR/scripts/examples/"
+        if [[ -f "$CONFIG_DIR/config.yaml.new" ]]; then
+            echo "  New config reference: $CONFIG_DIR/config.yaml.new"
+        fi
+        echo
+        echo -e "${BLUE}Your customizations preserved:${NC}"
+        echo "  Config: $CONFIG_DIR/config.yaml"
+        echo "  User scripts: $CONFIG_DIR/scripts/user/"
+        
+    else
+        echo -e "${RED}❌ Unknown mode: $MODE${NC}"
+        echo "Usage: $0 [install|update] [git|download|auto]"
+        exit 1
+    fi
 }
 
 # Run main function

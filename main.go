@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -189,57 +188,6 @@ func buildCmdy() {
 	}
 }
 
-func installCmdy() {
-	// Build first
-	buildCmdy()
-	
-	// Verify binary was created
-	if _, err := os.Stat(BinaryName); err != nil {
-		fmt.Printf("Error: Binary not found after build (%v)\n", err)
-		os.Exit(1)
-	}
-	
-	// Determine install location
-	installPath := GetInstallPath()
-	tempPath := installPath + ".tmp"
-	
-	// Create directory if needed
-	os.MkdirAll(filepath.Dir(installPath), 0755)
-	
-	// Copy binary to temp file first
-	src, err := os.Open(BinaryName)
-	if err != nil {
-		fmt.Printf("Failed to open binary: %v\n", err)
-		os.Exit(1)
-	}
-	defer src.Close()
-	
-	dst, err := os.Create(tempPath)
-	if err != nil {
-		fmt.Printf("Failed to create temp file: %v\n", err)
-		os.Exit(1)
-	}
-	defer dst.Close()
-	
-	_, err = io.Copy(dst, src)
-	if err != nil {
-		fmt.Printf("Failed to copy binary: %v\n", err)
-		os.Exit(1)
-	}
-	
-	// Make executable
-	os.Chmod(tempPath, PermExecutable)
-	dst.Close() // Close before rename
-	
-	// Atomic rename (works even if target is in use)
-	err = os.Rename(tempPath, installPath)
-	if err != nil {
-		fmt.Printf("Failed to install: %v\n", err)
-		// Clean up temp file
-		os.Remove(tempPath)
-		os.Exit(1)
-	}
-}
 
 func devWorkflow() {
 	msg := DefaultCommitMsg
@@ -256,137 +204,30 @@ func devWorkflow() {
 		os.Exit(1)
 	}
 	
-	// Install after successful git workflow
-	installCmdy()
+	// Install after successful git workflow using enhanced installer
+	cmd = exec.Command("./install.sh", "update", "git")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		fmt.Printf("Installation failed: %v\n", err)
+		os.Exit(1)
+	}
 	
 	fmt.Println(SuccessComplete)
 }
 
 func updateCmdy() {
-	// Show branding
-	fmt.Println("\033[0;34m")
-	fmt.Println("  ██████╗ ███╗   ███╗ ██████╗  ██╗   ██╗")
-	fmt.Println(" ██╔════╝ ████╗ ████║ ██╔══██╗ ╚██╗ ██╔╝")
-	fmt.Println(" ██║      ██╔████╔██║ ██║  ██║  ╚████╔╝ ")
-	fmt.Println(" ██║      ██║╚██╔╝██║ ██║  ██║   ╚██╔╝  ")
-	fmt.Println(" ╚██████╗ ██║ ╚═╝ ██║ ██████╔╝    ██║   ")
-	fmt.Println("  ╚═════╝ ╚═╝     ╚═╝ ╚═════╝     ╚═╝   ")
-	fmt.Println("\033[0m")
-	fmt.Println("\033[0;34m🔄 Updating cmdy\033[0m")
-	
-	// Find the cmdy source directory
-	sourceDir := findCmdySource()
-	if sourceDir == "" {
-		updateViaInstaller()
-		return
-	}
-	
-	// Change to source directory
-	originalDir, _ := os.Getwd()
-	defer os.Chdir(originalDir)
-	os.Chdir(sourceDir)
-	
-	// Git pull
-	cmd := exec.Command("git", "pull", "origin", "master")
-	cmd.Stdout = nil
+	// Use enhanced installer in update mode with smart source detection
+	cmd := exec.Command("bash", "-c", "curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash -s update auto")
+	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		fmt.Printf("\033[0;31m❌ Update failed: %v\033[0m\n", err)
 		os.Exit(1)
 	}
-	
-	// Check if config has changed and preserve user config
-	preserveUserConfig()
-	
-	// Build and install
-	installCmdy()
-	
-	fmt.Println("\033[0;32m✓ Updated\033[0m")
 }
 
-func updateViaInstaller() {
-	// Download and execute installer
-	cmd := exec.Command("bash", "-c", "curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash")
-	cmd.Stdout = nil
-	cmd.Stderr = os.Stderr
-	
-	if err := cmd.Run(); err != nil {
-		fmt.Printf("\033[0;31m❌ Update failed: %v\033[0m\n", err)
-		os.Exit(1)
-	}
-	
-	fmt.Println("\033[0;32m✓ Updated\033[0m")
-}
 
-func findCmdySource() string {
-	// First check current directory
-	if isGitRepo(".") && hasCmdyFiles(".") {
-		dir, _ := os.Getwd()
-		return dir
-	}
-	
-	// Common locations to check
-	homeDir, _ := os.UserHomeDir()
-	locations := make([]string, len(SourceSearchLocations))
-	for i, loc := range SourceSearchLocations {
-		locations[i] = filepath.Join(homeDir, loc)
-	}
-	
-	for _, location := range locations {
-		if isGitRepo(location) && hasCmdyFiles(location) {
-			return location
-		}
-	}
-	
-	return ""
-}
-
-func isGitRepo(dir string) bool {
-	gitDir := filepath.Join(dir, ".git")
-	_, err := os.Stat(gitDir)
-	return err == nil
-}
-
-func hasCmdyFiles(dir string) bool {
-	mainGo := filepath.Join(dir, "main.go")
-	configYaml := filepath.Join(dir, "config.yaml")
-	_, err1 := os.Stat(mainGo)
-	_, err2 := os.Stat(configYaml)
-	return err1 == nil && err2 == nil
-}
-
-func preserveUserConfig() {
-	userConfigPath := GetConfigPath()
-	newConfigPath := ConfigFileName
-	
-	// Check if user has a config and if it differs from new default
-	if _, err := os.Stat(userConfigPath); err == nil {
-		// User config exists, check if new config is different
-		cmd := exec.Command("diff", "-q", userConfigPath, newConfigPath)
-		if err := cmd.Run(); err != nil {
-			// Configs differ, backup the new one
-			backupPath := filepath.Join(ConfigDir, ConfigFileBackup)
-			copyFile(newConfigPath, backupPath)
-		}
-	}
-}
-
-func copyFile(src, dst string) error {
-	source, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer source.Close()
-	
-	dest, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer dest.Close()
-	
-	_, err = io.Copy(dest, source)
-	return err
-}
 
 func showVersion() {
 	cmd := exec.Command("git", "rev-parse", "--short", "HEAD")
@@ -513,7 +354,14 @@ func main() {
 		case "build":
 			buildCmdy()
 		case "install":
-			installCmdy()
+			// Use enhanced installer in install mode
+			cmd := exec.Command("./install.sh", "install", "git")
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			if err := cmd.Run(); err != nil {
+				fmt.Printf("Installation failed: %v\n", err)
+				os.Exit(1)
+			}
 		case "dev":
 			devWorkflow()
 		case "update":
