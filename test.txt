@@ -1,1 +1,1 @@
-test file for renamed git-commit-push script
+test standalone git-commit-push script
