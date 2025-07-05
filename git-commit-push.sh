@@ -1,6 +1,6 @@
 #!/bin/bash
-# Development workflow script for cmdy
-# Usage: ./dev-workflow.sh [commit_message] [git_remote] [git_branch]
+# Git commit and push script for cmdy
+# Usage: ./git-commit-push.sh [commit_message] [git_remote] [git_branch]
 set -e
 
 # Colors
@@ -11,7 +11,7 @@ COMMIT_MSG="${1:-Update cmdy}"
 GIT_REMOTE="${2:-origin}"
 GIT_BRANCH="${3:-master}"
 
-echo -e "${Y}🚀 Starting development workflow...${N}"
+echo -e "${Y}🚀 Starting git commit and push...${N}"
 
 # Check if there are any changes first
 echo -e "${Y}📊 Checking for changes...${N}"
@@ -45,4 +45,4 @@ if ! git push "$GIT_REMOTE" "$GIT_BRANCH" >/dev/null 2>&1; then
     exit 1
 fi
 
-echo -e "${G}✓ Git workflow completed successfully${N}"
+echo -e "${G}✓ Git commit and push completed successfully${N}"

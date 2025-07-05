@@ -462,3 +462,32 @@ go build -ldflags="-s -w" -o cmdy
 # Install from source
 go install github.com/jdpierce21/cmdy@latest
 ```
+
+### Helper Scripts
+
+cmdy includes several helper scripts for development and deployment:
+
+**`build.sh`** - Build optimized binary
+```bash
+./build.sh
+```
+
+**`install.sh`** - Complete installation script
+```bash
+curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash
+# Or locally:
+./install.sh
+```
+
+**`git-commit-push.sh`** - Git commit and push workflow
+```bash
+# Used internally by 'cmdy dev' command
+./git-commit-push.sh "commit message" [remote] [branch]
+
+# Features:
+# - Checks for changes before proceeding
+# - Shows what will be committed
+# - Stages, commits, and pushes in one operation
+# - Colorized output with progress indicators
+# - Proper error handling
+```
