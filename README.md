@@ -4,7 +4,7 @@
  ██║      ██╔████╔██║ ██║  ██║  ╚████╔╝ 
  ██║      ██║╚██╔╝██║ ██║  ██║   ╚██╔╝  
  ╚██████╗ ██║ ╚═╝ ██║ ██████╔╝    ██║   
-  ╚═════╝ ╚═╝     ╚═╝ ╚═════╝     ╚═╝   
+  ╚═════╝ ╚═╝     ╚═╝ ╚═════╝     ╚═yes╝   
 ```
 
 # cmdy
@@ -467,16 +467,18 @@ go install github.com/jdpierce21/cmdy@latest
 
 cmdy includes several helper scripts for development and deployment:
 
-**`build.sh`** - Build optimized binary
+**`install.sh`** - Complete installation/update script
 ```bash
-./build.sh
-```
-
-**`install.sh`** - Complete installation script
-```bash
+# Fresh installation:
 curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash
-# Or locally:
-./install.sh
+
+# Local usage:
+./install.sh [install|update] [git|download|auto]
+
+# Examples:
+./install.sh install          # Fresh install with auto-detection
+./install.sh update git       # Update using existing git source
+./install.sh update download  # Update by downloading fresh source
 ```
 
 **`git-commit-push.sh`** - Git commit and push workflow
