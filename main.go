@@ -247,44 +247,16 @@ func devWorkflow() {
 		msg = strings.Join(os.Args[2:], " ")
 	}
 	
-	// Check if there are any changes first
-	cmd := exec.Command("git", "status", "--porcelain")
-	output, err := cmd.Output()
-	if err != nil {
-		fmt.Printf("Git status failed: %v\n", err)
-		os.Exit(1)
-	}
-	
-	if len(strings.TrimSpace(string(output))) == 0 {
-		fmt.Println("No changes to commit")
-		return
-	}
-	
-	// Git add
-	cmd = exec.Command("git", "add", ".")
-	if err := cmd.Run(); err != nil {
-		fmt.Printf("Git add failed: %v\n", err)
-		os.Exit(1)
-	}
-	
-	// Git commit
-	cmd = exec.Command("git", "commit", "-m", msg)
-	cmd.Stdout = nil
-	if err := cmd.Run(); err != nil {
-		fmt.Printf("Git commit failed: %v\n", err)
-		os.Exit(1)
-	}
-	
-	// Git push
-	cmd = exec.Command("git", "push", GitRemote, GitBranch)
-	cmd.Stdout = nil
+	// Run git workflow script
+	cmd := exec.Command("./dev-workflow.sh", msg, GitRemote, GitBranch)
+	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		fmt.Printf("Git push failed: %v\n", err)
+		fmt.Printf("Development workflow failed: %v\n", err)
 		os.Exit(1)
 	}
 	
-	// Install
+	// Install after successful git workflow
 	installCmdy()
 	
 	fmt.Println(SuccessComplete)

@@ -17,7 +17,7 @@ A modern CLI command assistant for running OS-specific commands through an inter
 - **🌍 Cross-platform** - Linux, macOS, Windows support
 - **📝 Simple config** - Clean YAML format, no complex syntax
 - **🎨 Modern UI** - Beautiful fzf interface with fuzzy search
-- **🔄 OS-aware** - Automatically runs correct commands for your OS
+- **🔄 OS-aware** - Automatically runs the correct commands for your OS
 - **🚀 Zero dependencies** - Single binary, no runtime requirements
 - **🔍 Auto-discovery** - Automatically finds executable scripts
 - **🛠️ Self-managing** - Updates and maintains itself
@@ -56,7 +56,7 @@ This one-liner will automatically:
    ```bash
    git clone https://github.com/jdpierce21/cmdy.git
    cd cmdy
-   ./build.sh
+   go build -ldflags="-s -w" -o cmdy
    ```
 
 3. **Install globally** (optional):
@@ -109,7 +109,6 @@ export CMDY_SCRIPTS_USER="scripts/user"        # User scripts subdirectory
 export CMDY_CONFIG_FILE="config.yaml"          # Main config file
 export CMDY_CONFIG_BACKUP="config.yaml.new"    # Backup config file
 export CMDY_BINARY_NAME="cmdy"                 # Binary name
-export CMDY_BINARY_TEMP="cmdy.bin"            # Temporary binary name
 ```
 
 **URLs and Resources:**
@@ -118,6 +117,7 @@ export CMDY_REPO_URL="https://github.com/jdpierce21/cmdy"
 export CMDY_REPO_RAW_URL="https://raw.githubusercontent.com/jdpierce21/cmdy/master"
 export CMDY_GO_INSTALL_URL="https://golang.org/doc/install"
 export CMDY_FZF_INSTALL_URL="https://github.com/junegunn/fzf#installation"
+export CMDY_INSTALL_SCRIPT="https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh"
 ```
 
 **UI Customization:**
@@ -134,6 +134,24 @@ export CMDY_COLOR_RESET="\033[0m"              # Reset colors
 export CMDY_INSTALL_MESSAGE="🚀 Installing cmdy"
 export CMDY_SUCCESS_INSTALL="✓ Installed"
 export CMDY_SUCCESS_UPDATE="✓ Updated"
+export CMDY_SUCCESS_COMPLETE="✓ Complete"
+export CMDY_PREFIX_EXAMPLE="[example] "
+export CMDY_PREFIX_USER="[user] "
+export CMDY_DEFAULT_COMMIT="Update cmdy"
+```
+
+**Git Settings:**
+```bash
+export CMDY_GIT_BRANCH="master"                 # Default git branch
+export CMDY_GIT_REMOTE="origin"                 # Default git remote
+```
+
+**Commands:**
+```bash
+export CMDY_FZF_COMMAND="fzf --header=Select an option: --height=~50% --layout=reverse"
+export CMDY_FZF_HEADER="Select an option:"
+export CMDY_GO_BUILD_FLAGS="-ldflags=-s -w"
+export CMDY_SHELL_COMMAND="sh -c"
 ```
 
 **Example: Custom Installation:**
@@ -436,10 +454,10 @@ cmdy dev "your commit message"
 ### Manual Commands
 ```bash
 # Run directly
-go run main.go constants.go
+go run .
 
 # Build optimized binary
-go build -ldflags="-s -w" -o cmdy main.go constants.go
+go build -ldflags="-s -w" -o cmdy
 
 # Install from source
 go install github.com/jdpierce21/cmdy@latest

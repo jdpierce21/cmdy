@@ -30,10 +30,10 @@ menu_options:
 
   - display: "clean temp files and caches"
     commands:
-      linux: "./scripts/cleanup.sh"
-      mac: "./scripts/cleanup.sh"
+      linux: "./scripts/examples/cleanup.sh"
+      mac: "./scripts/examples/cleanup.sh"
 
   - display: "system health report"
     commands:
-      linux: "./scripts/health-check.sh"
-      mac: "./scripts/health-check.sh"
+      linux: "./scripts/examples/health-check.sh"
+      mac: "./scripts/examples/health-check.sh"
