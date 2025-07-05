@@ -23,6 +23,7 @@ CONFIG_DIR="$HOME/.config/cmdy"
 # Mode detection
 MODE="${1:-install}"
 SOURCE_METHOD="${2:-auto}"
+FORCE_UPDATE="${3:-}"
 
 # Smart messaging based on mode
 if [[ "$MODE" == "update" ]]; then
@@ -87,6 +88,63 @@ determine_source_method() {
             echo "download"
             ;;
     esac
+}
+
+# Function to get latest remote version
+get_latest_remote_version() {
+    curl -s "https://api.github.com/repos/jdpierce21/cmdy/commits/master" | \
+    grep '"sha"' | head -1 | cut -d'"' -f4
+}
+
+# Function to get installed version info
+get_installed_version() {
+    if [[ -f "$CONFIG_DIR/version.json" ]]; then
+        grep '"build_hash"' "$CONFIG_DIR/version.json" | cut -d'"' -f4
+    else
+        echo ""
+    fi
+}
+
+# Function to check if update is needed
+check_version_and_skip_if_current() {
+    if [[ "$FORCE_UPDATE" == "--force" ]]; then
+        echo -e "${YELLOW}🔄 Force update requested...${NC}"
+        return 0  # Continue with update
+    fi
+    
+    if [[ "$MODE" == "install" ]]; then
+        # Fresh install - always proceed
+        return 0
+    fi
+    
+    echo -e "${BLUE}🔍 Checking for updates...${NC}"
+    
+    # Get current installed version
+    local current_version
+    current_version=$(get_installed_version)
+    
+    if [[ -z "$current_version" ]]; then
+        echo -e "${YELLOW}ℹ️  No version info found, proceeding with update...${NC}"
+        return 0
+    fi
+    
+    # Get latest remote version
+    local latest_version
+    latest_version=$(get_latest_remote_version)
+    
+    if [[ -z "$latest_version" ]]; then
+        echo -e "${YELLOW}⚠️  Could not check for updates, proceeding anyway...${NC}"
+        return 0
+    fi
+    
+    # Compare versions
+    if [[ "$current_version" == "$latest_version" ]]; then
+        echo -e "${GREEN}✓ Already up-to-date (build: ${current_version:0:7})${NC}"
+        return 1  # Skip update
+    else
+        echo -e "${BLUE}🔄 New version available (${current_version:0:7} → ${latest_version:0:7})${NC}"
+        return 0  # Continue with update
+    fi
 }
 
 # Function to install dependencies
@@ -404,6 +462,11 @@ verify_installation() {
 
 # Main installation/update flow
 main() {
+    # Check version first (may exit early if already up-to-date)
+    if ! check_version_and_skip_if_current; then
+        exit 0  # Already up-to-date, exit gracefully
+    fi
+    
     if [[ "$MODE" == "install" ]]; then
         # Full installation flow
         install_dependencies
@@ -450,7 +513,7 @@ main() {
         
     else
         echo -e "${RED}❌ Unknown mode: $MODE${NC}"
-        echo "Usage: $0 [install|update] [git|download|auto]"
+        echo "Usage: $0 [install|update] [git|download|auto] [--force]"
         exit 1
     fi
 }

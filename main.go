@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -31,9 +30,6 @@ type VersionInfo struct {
 	InstallDate time.Time `json:"install_date"`
 }
 
-type GitHubCommit struct {
-	SHA string `json:"sha"`
-}
 
 
 func runFzf(options []MenuOption) (string, error) {
@@ -239,35 +235,15 @@ func devWorkflow() {
 func updateCmdy() {
 	forceUpdate := len(os.Args) > 2 && os.Args[2] == "--force"
 	
-	if !forceUpdate {
-		// Quick version check
-		fmt.Println("🔍 Checking for updates...")
-		
-		// Get current installed version
-		currentVersion := ""
-		if versionInfo := getInstalledVersionInfo(); versionInfo != nil {
-			currentVersion = versionInfo.BuildHash
-		} else if BuildVersion != "unknown" {
-			currentVersion = BuildVersion
-		}
-		
-		// Get latest remote version
-		latestVersion, err := getLatestRemoteVersion()
-		if err != nil {
-			fmt.Printf("⚠️  Could not check for updates: %v\n", err)
-			fmt.Println("🔄 Proceeding with update anyway...")
-		} else if currentVersion != "" && currentVersion == latestVersion {
-			fmt.Printf("✓ Already up-to-date (build: %s)\n", currentVersion[:7])
-			return
-		} else if currentVersion != "" && latestVersion != "" {
-			fmt.Printf("🔄 New version available (%s → %s)\n", currentVersion[:7], latestVersion[:7])
-		}
+	var cmd *exec.Cmd
+	if forceUpdate {
+		// Pass --force flag to installer
+		cmd = exec.Command("bash", "-c", "curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash -s update auto --force")
 	} else {
-		fmt.Println("🔄 Force update requested...")
+		// Let installer handle version checking
+		cmd = exec.Command("bash", "-c", "curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash -s update auto")
 	}
 	
-	// Proceed with full update
-	cmd := exec.Command("bash", "-c", "curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash -s update auto")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -278,7 +254,7 @@ func updateCmdy() {
 
 
 
-// Version tracking functions
+// Version display function
 func getVersionFilePath() string {
 	return filepath.Join(ConfigDir, "version.json")
 }
@@ -295,39 +271,6 @@ func getInstalledVersionInfo() *VersionInfo {
 	}
 	
 	return &info
-}
-
-func saveVersionInfo(buildHash, buildDate string) error {
-	info := VersionInfo{
-		BuildHash:   buildHash,
-		BuildDate:   buildDate,
-		InstallDate: time.Now(),
-	}
-	
-	data, err := json.MarshalIndent(info, "", "  ")
-	if err != nil {
-		return err
-	}
-	
-	// Ensure config directory exists
-	os.MkdirAll(filepath.Dir(getVersionFilePath()), 0755)
-	
-	return os.WriteFile(getVersionFilePath(), data, 0644)
-}
-
-func getLatestRemoteVersion() (string, error) {
-	resp, err := http.Get("https://api.github.com/repos/jdpierce21/cmdy/commits/master")
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	
-	var commit GitHubCommit
-	if err := json.NewDecoder(resp.Body).Decode(&commit); err != nil {
-		return "", err
-	}
-	
-	return commit.SHA, nil
 }
 
 func showVersion() {
