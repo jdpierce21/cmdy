@@ -92,6 +92,62 @@ cmdy help          # Show all commands
 
 ## Configuration
 
+### 🌍 Environment Variables
+
+cmdy supports extensive customization through environment variables. All paths, URLs, and settings can be overridden:
+
+**Core Paths:**
+```bash
+export CMDY_INSTALL_DIR="$HOME/.local/bin"     # Installation directory
+export CMDY_CONFIG_DIR="$HOME/.config/cmdy"    # Configuration directory
+export CMDY_SCRIPTS_EXAMPLES="scripts/examples" # Example scripts subdirectory
+export CMDY_SCRIPTS_USER="scripts/user"        # User scripts subdirectory
+```
+
+**File Names:**
+```bash
+export CMDY_CONFIG_FILE="config.yaml"          # Main config file
+export CMDY_CONFIG_BACKUP="config.yaml.new"    # Backup config file
+export CMDY_BINARY_NAME="cmdy"                 # Binary name
+export CMDY_BINARY_TEMP="cmdy.bin"            # Temporary binary name
+```
+
+**URLs and Resources:**
+```bash
+export CMDY_REPO_URL="https://github.com/jdpierce21/cmdy"
+export CMDY_REPO_RAW_URL="https://raw.githubusercontent.com/jdpierce21/cmdy/master"
+export CMDY_GO_INSTALL_URL="https://golang.org/doc/install"
+export CMDY_FZF_INSTALL_URL="https://github.com/junegunn/fzf#installation"
+```
+
+**UI Customization:**
+```bash
+export CMDY_COLOR_RED="\033[0;31m"             # Error messages
+export CMDY_COLOR_GREEN="\033[0;32m"           # Success messages  
+export CMDY_COLOR_BLUE="\033[0;34m"            # Info messages
+export CMDY_COLOR_YELLOW="\033[1;33m"          # Warning messages
+export CMDY_COLOR_RESET="\033[0m"              # Reset colors
+```
+
+**Messages:**
+```bash
+export CMDY_INSTALL_MESSAGE="🚀 Installing cmdy"
+export CMDY_SUCCESS_INSTALL="✓ Installed"
+export CMDY_SUCCESS_UPDATE="✓ Updated"
+```
+
+**Example: Custom Installation:**
+```bash
+# Install to custom location with custom branding
+export CMDY_INSTALL_DIR="$HOME/bin"
+export CMDY_CONFIG_DIR="$HOME/.my-cmdy"
+export CMDY_INSTALL_MESSAGE="🔧 Installing My Custom CLI"
+export CMDY_COLOR_BLUE="\033[0;35m"  # Purple instead of blue
+
+# Run installer with custom settings
+curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash
+```
+
 ### 🏗️ Layered Script Structure
 
 cmdy uses a **layered approach** for clear script ownership:
@@ -380,10 +436,10 @@ cmdy dev "your commit message"
 ### Manual Commands
 ```bash
 # Run directly
-go run main.go
+go run main.go constants.go
 
 # Build optimized binary
-go build -ldflags="-s -w" -o cmdy main.go
+go build -ldflags="-s -w" -o cmdy main.go constants.go
 
 # Install from source
 go install github.com/jdpierce21/cmdy@latest

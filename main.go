@@ -28,7 +28,7 @@ func runFzf(options []MenuOption) (string, error) {
 		b.WriteString(option.Display)
 	}
 
-	cmd := exec.Command("fzf", "--header=Select an option:", "--height=~50%", "--layout=reverse")
+	cmd := exec.Command("fzf", "--header=" + FzfHeader, "--height=~50%", "--layout=reverse")
 	cmd.Stdin = strings.NewReader(b.String())
 	cmd.Stderr = os.Stderr
 
@@ -42,8 +42,8 @@ func runFzf(options []MenuOption) (string, error) {
 func discoverScripts() []MenuOption {
 	var discovered []MenuOption
 	
-	// Scan both example and user script directories
-	dirs := []string{"scripts/examples", "scripts/user", "scripts"} // Keep "scripts" for backward compatibility
+	// Scan script directories
+	dirs := GetScriptDirs()
 	
 	for _, scriptsDir := range dirs {
 		scripts := scanScriptDirectory(scriptsDir)
@@ -51,8 +51,8 @@ func discoverScripts() []MenuOption {
 	}
 	
 	if len(discovered) == 0 {
-		fmt.Println("No executable scripts found in scripts/ directories")
-		fmt.Println("Add scripts to scripts/user/ or scripts/examples/")
+		fmt.Println(ErrorNoScripts)
+		fmt.Println(HelpAddScripts)
 	}
 	
 	return discovered
@@ -81,9 +81,9 @@ func scanScriptDirectory(scriptsDir string) []MenuOption {
 		name := strings.TrimSuffix(file.Name(), filepath.Ext(file.Name()))
 		dirName := filepath.Base(scriptsDir)
 		if dirName == "examples" {
-			name = "[example] " + name
+			name = PrefixExample + name
 		} else if dirName == "user" {
-			name = "[user] " + name
+			name = PrefixUser + name
 		}
 		
 		scriptPath := "./" + filepath.Join(scriptsDir, file.Name())
@@ -115,7 +115,7 @@ func mergeOptions(config []MenuOption, discovered []MenuOption) []MenuOption {
 	configPaths := make(map[string]bool)
 	for _, option := range config {
 		for _, cmd := range option.Commands {
-			if strings.HasPrefix(cmd, "./scripts/") {
+			if strings.HasPrefix(cmd, "./" + ScriptsDirExamples) || strings.HasPrefix(cmd, "./" + ScriptsDirUser) || strings.HasPrefix(cmd, "./" + ScriptsDirLegacy) {
 				configPaths[cmd] = true
 			}
 		}
@@ -143,7 +143,7 @@ func commandExists(cmd string) bool {
 }
 
 func executeCommand(command string) error {
-	cmd := exec.Command("sh", "-c", command)
+	cmd := exec.Command(strings.Fields(ShellCommand)[0], strings.Fields(ShellCommand)[1], command)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -153,7 +153,7 @@ func executeCommand(command string) error {
 // Old main function moved to runInteractiveMenu above
 
 func showUsage() {
-	fmt.Println("cmdy - Modern CLI Command Assistant")
+	fmt.Println(AppTitle)
 	fmt.Println("")
 	fmt.Println("Usage:")
 	fmt.Println("  cmdy           Run interactive menu")
@@ -194,21 +194,20 @@ func installCmdy() {
 	buildCmdy()
 	
 	// Verify binary was created
-	if _, err := os.Stat("cmdy"); err != nil {
+	if _, err := os.Stat(BinaryName); err != nil {
 		fmt.Printf("Error: Binary not found after build (%v)\n", err)
 		os.Exit(1)
 	}
 	
 	// Determine install location
-	homeDir, _ := os.UserHomeDir()
-	installPath := filepath.Join(homeDir, ".local", "bin", "cmdy")
+	installPath := GetInstallPath()
 	tempPath := installPath + ".tmp"
 	
 	// Create directory if needed
 	os.MkdirAll(filepath.Dir(installPath), 0755)
 	
 	// Copy binary to temp file first
-	src, err := os.Open("cmdy")
+	src, err := os.Open(BinaryName)
 	if err != nil {
 		fmt.Printf("Failed to open binary: %v\n", err)
 		os.Exit(1)
@@ -229,7 +228,7 @@ func installCmdy() {
 	}
 	
 	// Make executable
-	os.Chmod(tempPath, 0755)
+	os.Chmod(tempPath, PermExecutable)
 	dst.Close() // Close before rename
 	
 	// Atomic rename (works even if target is in use)
@@ -243,7 +242,7 @@ func installCmdy() {
 }
 
 func devWorkflow() {
-	msg := "Update cmdy"
+	msg := DefaultCommitMsg
 	if len(os.Args) > 2 {
 		msg = strings.Join(os.Args[2:], " ")
 	}
@@ -277,7 +276,7 @@ func devWorkflow() {
 	}
 	
 	// Git push
-	cmd = exec.Command("git", "push", "origin", "master")
+	cmd = exec.Command("git", "push", GitRemote, GitBranch)
 	cmd.Stdout = nil
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -288,7 +287,7 @@ func devWorkflow() {
 	// Install
 	installCmdy()
 	
-	fmt.Println("✓ Complete")
+	fmt.Println(SuccessComplete)
 }
 
 func updateCmdy() {
@@ -367,13 +366,9 @@ func findCmdySource() string {
 	
 	// Common locations to check
 	homeDir, _ := os.UserHomeDir()
-	locations := []string{
-		filepath.Join(homeDir, "cmdy"),
-		filepath.Join(homeDir, "projects", "cmdy"),
-		filepath.Join(homeDir, "src", "cmdy"),
-		filepath.Join(homeDir, "dev", "cmdy"),
-		filepath.Join(homeDir, "code", "cmdy"),
-		filepath.Join(homeDir, "scripts", "cmdy"),
+	locations := make([]string, len(SourceSearchLocations))
+	for i, loc := range SourceSearchLocations {
+		locations[i] = filepath.Join(homeDir, loc)
 	}
 	
 	for _, location := range locations {
@@ -400,9 +395,8 @@ func hasCmdyFiles(dir string) bool {
 }
 
 func preserveUserConfig() {
-	homeDir, _ := os.UserHomeDir()
-	userConfigPath := filepath.Join(homeDir, ".config", "cmdy", "config.yaml")
-	newConfigPath := "config.yaml"
+	userConfigPath := GetConfigPath()
+	newConfigPath := ConfigFileName
 	
 	// Check if user has a config and if it differs from new default
 	if _, err := os.Stat(userConfigPath); err == nil {
@@ -410,7 +404,7 @@ func preserveUserConfig() {
 		cmd := exec.Command("diff", "-q", userConfigPath, newConfigPath)
 		if err := cmd.Run(); err != nil {
 			// Configs differ, backup the new one
-			backupPath := filepath.Join(homeDir, ".config", "cmdy", "config.yaml.new")
+			backupPath := filepath.Join(ConfigDir, ConfigFileBackup)
 			copyFile(newConfigPath, backupPath)
 		}
 	}
@@ -437,14 +431,14 @@ func showVersion() {
 	cmd := exec.Command("git", "rev-parse", "--short", "HEAD")
 	output, err := cmd.Output()
 	if err != nil {
-		fmt.Println("Version: unknown (not in git repo)")
+		fmt.Println(VersionUnknown)
 		return
 	}
 	fmt.Printf("cmdy version: %s\n", strings.TrimSpace(string(output)))
 }
 
 func editConfig() {
-	configPath := "config.yaml"
+	configPath := ConfigFileName
 	
 	editor, err := findEditor()
 	if err != nil {
@@ -478,7 +472,7 @@ func findEditor() (string, error) {
 	}
 	
 	// Progressive fallback
-	candidates := []string{"nano", "vi", "vim", "emacs", "code", "notepad"}
+	candidates := EditorCandidates
 	for _, candidate := range candidates {
 		if commandExists(candidate) {
 			return candidate, nil

@@ -5,18 +5,18 @@
 
 set -e
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
+# Colors for output (can be overridden by environment variables)
+RED="${CMDY_COLOR_RED:-\033[0;31m}"
+GREEN="${CMDY_COLOR_GREEN:-\033[0;32m}"
+YELLOW="${CMDY_COLOR_YELLOW:-\033[1;33m}"
+BLUE="${CMDY_COLOR_BLUE:-\033[0;34m}"
+NC="${CMDY_COLOR_RESET:-\033[0m}"
 
-# Configuration
-REPO_URL="https://github.com/jdpierce21/cmdy"
-REPO_RAW_URL="https://raw.githubusercontent.com/jdpierce21/cmdy/master"
-INSTALL_DIR="$HOME/.local/bin"
-CONFIG_DIR="$HOME/.config/cmdy"
+# Configuration (can be overridden by environment variables)
+REPO_URL="${CMDY_REPO_URL:-https://github.com/jdpierce21/cmdy}"
+REPO_RAW_URL="${CMDY_REPO_RAW_URL:-https://raw.githubusercontent.com/jdpierce21/cmdy/master}"
+INSTALL_DIR="${CMDY_INSTALL_DIR:-$HOME/.local/bin}"
+CONFIG_DIR="${CMDY_CONFIG_DIR:-$HOME/.config/cmdy}"
 
 # Show branding
 echo -e "${BLUE}"
@@ -27,7 +27,7 @@ echo " ██║      ██║╚██╔╝██║ ██║  ██║   �
 echo " ╚██████╗ ██║ ╚═╝ ██║ ██████╔╝    ██║   "
 echo "  ╚═════╝ ╚═╝     ╚═╝ ╚═════╝     ╚═╝   "
 echo -e "${NC}"
-echo -e "${BLUE}🚀 Installing cmdy${NC}"
+echo -e "${BLUE}${CMDY_INSTALL_MESSAGE:-🚀 Installing cmdy}${NC}"
 
 
 # Function to detect OS
@@ -56,7 +56,7 @@ install_dependencies() {
                     sudo pacman -S fzf &> /dev/null
                 else
                     echo -e "${RED}❌ Cannot install fzf automatically. Please install manually.${NC}"
-                    echo "Visit: https://github.com/junegunn/fzf#installation"
+                    echo "Visit: ${CMDY_FZF_INSTALL_URL:-https://github.com/junegunn/fzf#installation}"
                     exit 1
                 fi
                 ;;
@@ -65,13 +65,13 @@ install_dependencies() {
                     brew install fzf &> /dev/null
                 else
                     echo -e "${RED}❌ Homebrew not found. Please install fzf manually.${NC}"
-                    echo "Visit: https://github.com/junegunn/fzf#installation"
+                    echo "Visit: ${CMDY_FZF_INSTALL_URL:-https://github.com/junegunn/fzf#installation}"
                     exit 1
                 fi
                 ;;
             *)
                 echo -e "${RED}❌ Unsupported OS for automatic fzf installation.${NC}"
-                echo "Please install fzf manually: https://github.com/junegunn/fzf#installation"
+                echo "Please install fzf manually: ${CMDY_FZF_INSTALL_URL:-https://github.com/junegunn/fzf#installation}"
                 exit 1
                 ;;
         esac
@@ -89,7 +89,7 @@ install_dependencies() {
                     sudo pacman -S go &> /dev/null
                 else
                     echo -e "${RED}❌ Cannot install Go automatically. Please install manually.${NC}"
-                    echo "Visit: https://golang.org/doc/install"
+                    echo "Visit: ${CMDY_GO_INSTALL_URL:-https://golang.org/doc/install}"
                     exit 1
                 fi
                 ;;
@@ -98,13 +98,13 @@ install_dependencies() {
                     brew install go &> /dev/null
                 else
                     echo -e "${RED}❌ Homebrew not found. Please install Go manually.${NC}"
-                    echo "Visit: https://golang.org/doc/install"
+                    echo "Visit: ${CMDY_GO_INSTALL_URL:-https://golang.org/doc/install}"
                     exit 1
                 fi
                 ;;
             *)
                 echo -e "${RED}❌ Unsupported OS for automatic Go installation.${NC}"
-                echo "Please install Go manually: https://golang.org/doc/install"
+                echo "Please install Go manually: ${CMDY_GO_INSTALL_URL:-https://golang.org/doc/install}"
                 exit 1
                 ;;
         esac
@@ -130,7 +130,7 @@ install_cmdy() {
     }
     
     # Build binary
-    go build -o cmdy main.go &> /dev/null || {
+    go build -o cmdy ${CMDY_MAIN_FILE:-main.go} &> /dev/null || {
         echo -e "${RED}❌ Failed to build cmdy${NC}"
         exit 1
     }
@@ -138,11 +138,11 @@ install_cmdy() {
     # Install binary (rename to .bin for wrapper)
     
     if [[ -f "cmdy" ]]; then
-        mv cmdy "$INSTALL_DIR/cmdy.bin" || {
+        mv cmdy "$INSTALL_DIR/${CMDY_BINARY_TEMP:-cmdy.bin}" || {
             echo -e "${RED}❌ Failed to move binary${NC}"
             exit 1
         }
-        chmod +x "$INSTALL_DIR/cmdy.bin"
+        chmod +x "$INSTALL_DIR/${CMDY_BINARY_TEMP:-cmdy.bin}"
     else
         echo -e "${RED}❌ Binary not found after build${NC}"
         exit 1
@@ -151,29 +151,29 @@ install_cmdy() {
     # Copy config and scripts
     
     # Only copy config if it doesn't exist (preserve user customizations)
-    if [[ ! -f "$CONFIG_DIR/config.yaml" ]]; then
+    if [[ ! -f "$CONFIG_DIR/${CMDY_CONFIG_FILE:-config.yaml}" ]]; then
         cp config.yaml "$CONFIG_DIR/"
     else
-        cp config.yaml "$CONFIG_DIR/config.yaml.new" &> /dev/null
+        cp config.yaml "$CONFIG_DIR/${CMDY_CONFIG_BACKUP:-config.yaml.new}" &> /dev/null
     fi
     
     # Create layered script structure
     
     # Create directory structure
-    mkdir -p "$CONFIG_DIR/scripts/examples"
-    mkdir -p "$CONFIG_DIR/scripts/user"
+    mkdir -p "$CONFIG_DIR/${CMDY_SCRIPTS_EXAMPLES:-scripts/examples}"
+    mkdir -p "$CONFIG_DIR/${CMDY_SCRIPTS_USER:-scripts/user}"
     
     # Always update example scripts
-    cp scripts/*.sh "$CONFIG_DIR/scripts/examples/" &> /dev/null || true
-    chmod +x "$CONFIG_DIR/scripts/examples/"*.sh &> /dev/null || true
+    cp scripts/*.sh "$CONFIG_DIR/${CMDY_SCRIPTS_EXAMPLES:-scripts/examples}/" &> /dev/null || true
+    chmod +x "$CONFIG_DIR/${CMDY_SCRIPTS_EXAMPLES:-scripts/examples}/"*.sh &> /dev/null || true
     
     # Migrate existing user scripts if any
-    if [[ -d "$CONFIG_DIR/scripts" ]] && [[ ! -d "$CONFIG_DIR/scripts/examples" ]]; then
-        find "$CONFIG_DIR/scripts" -name "*.sh" -maxdepth 1 -exec mv {} "$CONFIG_DIR/scripts/user/" \; &> /dev/null
+    if [[ -d "$CONFIG_DIR/${CMDY_SCRIPTS_LEGACY:-scripts}" ]] && [[ ! -d "$CONFIG_DIR/${CMDY_SCRIPTS_EXAMPLES:-scripts/examples}" ]]; then
+        find "$CONFIG_DIR/${CMDY_SCRIPTS_LEGACY:-scripts}" -name "*.sh" -maxdepth 1 -exec mv {} "$CONFIG_DIR/${CMDY_SCRIPTS_USER:-scripts/user}/" \; &> /dev/null
     fi
     
     # Create helpful README
-    cat > "$CONFIG_DIR/scripts/README.md" << 'EOF'
+    cat > "$CONFIG_DIR/${CMDY_SCRIPTS_LEGACY:-scripts}/README.md" << 'EOF'
 # Scripts Directory Structure
 
 ## examples/
@@ -226,22 +226,22 @@ setup_path() {
 create_wrapper() {
     
     # Create wrapper script (binary already renamed to .bin)
-    cat > "$INSTALL_DIR/cmdy" << 'EOF'
+    cat > "$INSTALL_DIR/${CMDY_BINARY_NAME:-cmdy}" << EOF
 #!/bin/bash
 
 # cmdy wrapper script
-CONFIG_DIR="$HOME/.config/cmdy"
+CONFIG_DIR="\${CMDY_CONFIG_DIR:-\$HOME/.config/cmdy}"
 
 # Change to config directory so relative paths work
-cd "$CONFIG_DIR"
+cd "\$CONFIG_DIR"
 
 # Run the actual cmdy binary
-exec "$HOME/.local/bin/cmdy.bin" "$@"
+exec "\${CMDY_INSTALL_DIR:-\$HOME/.local/bin}/\${CMDY_BINARY_TEMP:-cmdy.bin}" "\$@"
 EOF
 
     # Check if wrapper was created successfully
-    if [[ -f "$INSTALL_DIR/cmdy" ]]; then
-        chmod +x "$INSTALL_DIR/cmdy"
+    if [[ -f "$INSTALL_DIR/${CMDY_BINARY_NAME:-cmdy}" ]]; then
+        chmod +x "$INSTALL_DIR/${CMDY_BINARY_NAME:-cmdy}"
     else
         echo -e "${RED}❌ Failed to create wrapper script${NC}"
         exit 1
@@ -255,7 +255,7 @@ verify_installation() {
         exit 1
     fi
     
-    if [[ ! -f "$CONFIG_DIR/config.yaml" ]]; then
+    if [[ ! -f "$CONFIG_DIR/${CMDY_CONFIG_FILE:-config.yaml}" ]]; then
         echo -e "${RED}❌ Configuration not found${NC}"
         exit 1
     fi
@@ -276,12 +276,12 @@ main() {
     setup_path
     verify_installation
     
-    echo -e "${GREEN}✓ Installed${NC}"
+    echo -e "${GREEN}${CMDY_SUCCESS_INSTALL:-✓ Installed}${NC}"
     echo
     echo -e "${BLUE}Next steps:${NC}"
-    echo "• Run 'cmdy' to start"
-    echo "• Add scripts to ~/.config/cmdy/scripts/user/"
-    echo "• Edit ~/.config/cmdy/config.yaml to customize"
+    echo "• Run '${CMDY_BINARY_NAME:-cmdy}' to start"
+    echo "• Add scripts to ${CONFIG_DIR}/${CMDY_SCRIPTS_USER:-scripts/user}/"
+    echo "• Edit ${CONFIG_DIR}/${CMDY_CONFIG_FILE:-config.yaml} to customize"
 }
 
 # Run main function
