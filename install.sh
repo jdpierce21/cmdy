@@ -20,8 +20,17 @@ REPO_RAW_URL="https://raw.githubusercontent.com/jdpierce21/cmdy/master"
 INSTALL_DIR="$HOME/.local/bin"
 CONFIG_DIR="$HOME/.config/cmdy"
 
-# Mode detection
-MODE="${1:-install}"
+# Mode detection with auto-detection
+if [[ -n "${1}" ]]; then
+    MODE="${1}"
+else
+    # Auto-detect mode based on existing installation
+    if [[ -f "$HOME/.local/bin/cmdy" || -f "$HOME/.local/bin/cmdy.bin" ]]; then
+        MODE="update"
+    else
+        MODE="install"
+    fi
+fi
 SOURCE_METHOD="${2:-auto}"
 FORCE_UPDATE="${3:-}"
 
