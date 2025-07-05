@@ -1,1 +1,1 @@
-test updated documentation and script
+test standalone updated script
