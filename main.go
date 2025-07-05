@@ -180,7 +180,7 @@ func buildCmdy() {
 		os.Exit(1)
 	}
 	
-	cmd := exec.Command("go", "build", "-ldflags=-s -w", "-o", "cmdy", "main.go")
+	cmd := exec.Command("go", "build", "-ldflags=-s -w", "-o", "cmdy")
 	cmd.Stdout = nil
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
