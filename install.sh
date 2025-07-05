@@ -26,9 +26,8 @@ if [[ "$1" == "--force" ]]; then
     FORCE_UPDATE="--force"
 fi
 
-SOURCE_METHOD="auto"
 
-echo -e "\n${BLUE}🔄 cmdy installer ... ${NC}\n"
+echo -e "\n${BLUE}cmdy - powerful CLI, modern UX${NC}\n"
 
 # Function to detect OS
 detect_os() {
@@ -69,24 +68,6 @@ find_cmdy_source() {
     return 1
 }
 
-# Function to determine source method
-determine_source_method() {
-    case "$SOURCE_METHOD" in
-        "git"|"download")
-            echo "$SOURCE_METHOD"
-            ;;
-        "auto")
-            if find_cmdy_source >/dev/null 2>&1; then
-                echo "git"
-            else
-                echo "download"
-            fi
-            ;;
-        *)
-            echo "download"
-            ;;
-    esac
-}
 
 # Function to get latest remote version
 get_latest_remote_version() {
@@ -106,15 +87,15 @@ get_installed_version() {
 # Function to check if installation/update is needed
 check_if_install_needed() {
     if [[ "$FORCE_UPDATE" == "--force" ]]; then
-        echo -e "${YELLOW}🔄 Force install/update requested...${NC}"
+        echo -e "⚠️ Force install/update requested... "
         return 0  # Continue with install
     fi
     
-    echo -e "${BLUE}🔍 Checking installation status...${NC}"
+    echo -e "🔍 Checking installation status... ✅"
     
     # Check if cmdy is installed
     if [[ ! -f "$INSTALL_DIR/cmdy" && ! -f "$INSTALL_DIR/cmdy.bin" ]]; then
-        echo -e "${BLUE}📦 cmdy not found, proceeding with installation...${NC}"
+        echo -e "📦 cmdy not found, proceeding with installation..."
         return 0  # Continue with install
     fi
     
@@ -123,7 +104,7 @@ check_if_install_needed() {
     current_version=$(get_installed_version)
     
     if [[ -z "$current_version" ]]; then
-        echo -e "${YELLOW}ℹ️  No version info found, proceeding with update...${NC}"
+        echo -e "⚠️ No version info found, proceeding with update..."
         return 0
     fi
     
@@ -132,16 +113,16 @@ check_if_install_needed() {
     latest_version=$(get_latest_remote_version)
     
     if [[ -z "$latest_version" ]]; then
-        echo -e "${YELLOW}⚠️  Could not check for updates, proceeding anyway...${NC}"
+        echo -e "⚠️ Could not check for updates, proceeding anyway..."
         return 0
     fi
     
     # Compare versions
     if [[ "$current_version" == "$latest_version" ]]; then
-        echo -e "${GREEN}✓ Already up-to-date (build: ${current_version:0:7})${NC}"
+        echo -e "👍 Already up-to-date (build: ${current_version:0:7})${NC}"
         return 1  # Skip install
     else
-        echo -e "${BLUE}🔄 New version available (${current_version:0:7} → ${latest_version:0:7})${NC}"
+        echo -e "$🎂 New version available (${current_version:0:7} → ${latest_version:0:7})${NC}"
         return 0  # Continue with install
     fi
 }
@@ -222,33 +203,26 @@ create_directories() {
 
 # Function to build and install cmdy from source
 install_cmdy() {
-    local source_method=$(determine_source_method)
-    local status="🔨 Building cmdy from source..."
+    local status="🔨 Building cmdy from source... ✅"
     local source_dir=""
     local cleanup_needed=false
     
     echo -e "${YELLOW}${status}${NC}"
     
-    if [[ "$source_method" == "git" ]]; then
+    # Try to use existing git source first, fallback to download
+    source_dir=$(find_cmdy_source)
+    if [[ -n "$source_dir" ]]; then
         # Use existing git repository
-        source_dir=$(find_cmdy_source)
-        if [[ -z "$source_dir" ]]; then
-            echo -e "${RED}❌ Git source not found, falling back to download${NC}"
-            source_method="download"
-        else
-            echo -e "${YELLOW}📁 Using existing source: $source_dir${NC}"
-            cd "$source_dir"
-            
-            # Always pull latest changes when using git source
-            echo -e "${YELLOW}🔄 Pulling latest changes...${NC}"
-            git pull origin master > /dev/null 2>&1 || {
-                echo -e "${RED}❌ Git pull failed${NC}"
-                exit 1
-            }
-        fi
-    fi
-    
-    if [[ "$source_method" == "download" ]]; then
+        echo -e "${YELLOW}📁 Using existing source: $source_dir${NC}"
+        cd "$source_dir"
+        
+        # Always pull latest changes when using git source
+        echo -e "${YELLOW}🔄 Pulling latest changes...${NC}"
+        git pull origin master > /dev/null 2>&1 || {
+            echo -e "${RED}❌ Git pull failed${NC}"
+            exit 1
+        }
+    else
         # Download fresh source
         TEMP_DIR=$(mktemp -d)
         source_dir="$TEMP_DIR"
@@ -281,8 +255,7 @@ install_cmdy() {
             exit 1
         }
         chmod +x "$INSTALL_DIR/cmdy.bin"
-        echo -e "${GREEN}✓ Binary installed${NC}"
-        
+
         # Save version information
         echo -e "${YELLOW}📋 Saving version info...${NC}"
         mkdir -p "$CONFIG_DIR"
@@ -293,7 +266,6 @@ install_cmdy() {
   "install_date": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 }
 EOF
-        echo -e "${GREEN}✓ Version info saved${NC}"
     else
         echo -e "${RED}❌ Binary not found after build${NC}"
         [[ "$cleanup_needed" == true ]] && rm -rf "$TEMP_DIR"
@@ -305,13 +277,11 @@ EOF
         # Existing config - preserve and backup new defaults
         echo -e "${YELLOW}📋 Preserving user configuration...${NC}"
         cp config.yaml "$CONFIG_DIR/config.yaml.new" > /dev/null 2>&1
-        echo -e "${GREEN}✓ User config preserved, new defaults saved as config.yaml.new${NC}"
         
         # Update example scripts but preserve user scripts
         if [[ -d "$CONFIG_DIR/scripts" ]]; then
             cp -r scripts/examples "$CONFIG_DIR/scripts/" > /dev/null 2>&1
             chmod +x "$CONFIG_DIR/scripts/examples"/*.sh 2>/dev/null || true
-            echo -e "${GREEN}✓ Example scripts updated${NC}"
         else
             cp -r scripts "$CONFIG_DIR/" > /dev/null 2>&1
             chmod +x "$CONFIG_DIR/scripts"/*.sh 2>/dev/null || true
@@ -478,9 +448,8 @@ main() {
     
     # Success messaging based on install type
     echo
+    echo -e "🎉🎉🎉 Install/update completed successfully! 🎉🎉🎉"
     if [[ "$is_fresh_install" == true ]]; then
-        echo -e "🎉🎉🎉 Installation completed successfully! 🎉🎉🎉"
-        echo
         echo -e "${BLUE}Next steps:${NC}"
         echo "1. Run 'cmdy' to start using your command assistant!"
         echo "2. Customize $CONFIG_DIR/config.yaml to add your own commands"
@@ -491,18 +460,7 @@ main() {
         echo
         echo -e "${YELLOW}⭐ Star the repo: $REPO_URL${NC}"
     else
-        echo -e "${GREEN}✓ Updated successfully!${NC}"
-        echo
-        echo -e "${BLUE}What was updated:${NC}"
-        echo "  Binary: $INSTALL_DIR/cmdy.bin"
-        echo "  Examples: $CONFIG_DIR/scripts/examples/"
-        if [[ -f "$CONFIG_DIR/config.yaml.new" ]]; then
-            echo "  New config reference: $CONFIG_DIR/config.yaml.new"
-        fi
-        echo
-        echo -e "${BLUE}Your customizations preserved:${NC}"
-        echo "  Config: $CONFIG_DIR/config.yaml"
-        echo "  User scripts: $CONFIG_DIR/scripts/user/"
+        echo ""
     fi
 }
 
