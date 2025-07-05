@@ -207,17 +207,17 @@ install_cmdy() {
     local source_dir=""
     local cleanup_needed=false
     
-    echo -e "${YELLOW}${status}${NC}"
+    echo -e "${status}"
     
     # Try to use existing git source first, fallback to download
     source_dir=$(find_cmdy_source)
     if [[ -n "$source_dir" ]]; then
         # Use existing git repository
-        echo -e "${YELLOW}📁 Using existing source: $source_dir${NC}"
+        echo -e "📁 Using existing source: $source_dir"
         cd "$source_dir"
         
         # Always pull latest changes when using git source
-        echo -e "${YELLOW}🔄 Pulling latest changes...${NC}"
+        echo -e "🔄 Pulling latest changes..."
         git pull origin master > /dev/null 2>&1 || {
             echo -e "${RED}❌ Git pull failed${NC}"
             exit 1
@@ -229,7 +229,7 @@ install_cmdy() {
         cleanup_needed=true
         cd "$TEMP_DIR"
         
-        echo -e "${YELLOW}📥 Downloading source...${NC}"
+        echo -e "📥 Downloading source..."
         git clone "$REPO_URL.git" . > /dev/null 2>&1 || {
             echo -e "${RED}❌ Failed to download source${NC}"
             exit 1
@@ -237,7 +237,7 @@ install_cmdy() {
     fi
     
     # Build binary with consistent optimization and version embedding
-    echo -e "${YELLOW}🔨 Building optimized binary...${NC}"
+    echo -e "🔨 Building optimized binary..."
     local current_hash=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
     local build_date=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
     
@@ -257,7 +257,7 @@ install_cmdy() {
         chmod +x "$INSTALL_DIR/cmdy.bin"
 
         # Save version information
-        echo -e "${YELLOW}📋 Saving version info...${NC}"
+        echo -e "📋 Saving version info..."
         mkdir -p "$CONFIG_DIR"
         cat > "$CONFIG_DIR/version.json" << EOF
 {
@@ -275,7 +275,7 @@ EOF
     # Handle config based on existing installation
     if [[ -f "$CONFIG_DIR/config.yaml" ]]; then
         # Existing config - preserve and backup new defaults
-        echo -e "${YELLOW}📋 Preserving user configuration...${NC}"
+        echo -e "📋 Preserving user configuration..."
         cp config.yaml "$CONFIG_DIR/config.yaml.new" > /dev/null 2>&1
         
         # Update example scripts but preserve user scripts
@@ -289,7 +289,7 @@ EOF
         fi
     else
         # Fresh install - copy everything
-        echo -e "${YELLOW}📋 Installing configuration...${NC}"
+        echo -e "📋 Installing configuration..."
         cp config.yaml "$CONFIG_DIR/" > /dev/null 2>&1
         cp -r scripts "$CONFIG_DIR/" > /dev/null 2>&1
         chmod +x "$CONFIG_DIR/scripts"/*.sh 2>/dev/null || true
