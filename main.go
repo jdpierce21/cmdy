@@ -185,7 +185,7 @@ func buildCmdy() {
 	// Check if Go is available
 	if !commandExists("go") {
 		fmt.Println("Error: Go compiler not found")
-		fmt.Println("Install Go: https://golang.org/doc/install")
+		fmt.Printf("Install Go: %s\n", GoInstallURL)
 		os.Exit(1)
 	}
 	
@@ -238,10 +238,10 @@ func updateCmdy() {
 	var cmd *exec.Cmd
 	if forceUpdate {
 		// Pass --force flag to installer
-		cmd = exec.Command("bash", "-c", "curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash -s -- --force")
+		cmd = exec.Command("bash", "-c", fmt.Sprintf("curl -sSL %s | bash -s -- --force", InstallScript))
 	} else {
 		// Let installer handle all logic
-		cmd = exec.Command("bash", "-c", "curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash")
+		cmd = exec.Command("bash", "-c", fmt.Sprintf("curl -sSL %s | bash", InstallScript))
 	}
 	
 	cmd.Stdout = os.Stdout
@@ -374,7 +374,7 @@ func runInteractiveMenu() {
 		fmt.Println("Solutions:")
 		fmt.Println("1. Add entries to config.yaml")
 		fmt.Println("2. Add executable scripts to scripts/ directory")
-		fmt.Println("3. Check example config: https://github.com/jdpierce21/cmdy")
+		fmt.Printf("3. Check example config: %s\n", RepoURL)
 		os.Exit(1)
 	}
 	
