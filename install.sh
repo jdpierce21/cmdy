@@ -20,8 +20,13 @@ REPO_RAW_URL="https://raw.githubusercontent.com/jdpierce21/cmdy/master"
 INSTALL_DIR="$HOME/.local/bin"
 CONFIG_DIR="$HOME/.config/cmdy"
 
-SOURCE_METHOD="${1:-auto}"
-FORCE_UPDATE="${2:-}"
+# Check for force flag
+FORCE_UPDATE=""
+if [[ "$1" == "--force" ]]; then
+    FORCE_UPDATE="--force"
+fi
+
+SOURCE_METHOD="auto"
 
 echo -e "\n${BLUE}🔄 cmdy installer ... ${NC}\n"
 

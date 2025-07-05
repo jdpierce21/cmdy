@@ -238,10 +238,10 @@ func updateCmdy() {
 	var cmd *exec.Cmd
 	if forceUpdate {
 		// Pass --force flag to installer
-		cmd = exec.Command("bash", "-c", "curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash -s auto --force")
+		cmd = exec.Command("bash", "-c", "curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash -s -- --force")
 	} else {
 		// Let installer handle all logic
-		cmd = exec.Command("bash", "-c", "curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash -s auto")
+		cmd = exec.Command("bash", "-c", "curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash")
 	}
 	
 	cmd.Stdout = os.Stdout
@@ -412,7 +412,7 @@ func main() {
 			buildCmdy()
 		case "install":
 			// Use installer script (let it handle all logic)
-			cmd := exec.Command("./install.sh", "git")
+			cmd := exec.Command("./install.sh")
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			if err := cmd.Run(); err != nil {
