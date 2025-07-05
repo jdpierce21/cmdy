@@ -238,16 +238,16 @@ func updateCmdy() {
 	var cmd *exec.Cmd
 	if forceUpdate {
 		// Pass --force flag to installer
-		cmd = exec.Command("bash", "-c", "curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash -s update auto --force")
+		cmd = exec.Command("bash", "-c", "curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash -s auto --force")
 	} else {
-		// Let installer handle version checking
-		cmd = exec.Command("bash", "-c", "curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash -s update auto")
+		// Let installer handle all logic
+		cmd = exec.Command("bash", "-c", "curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | bash -s auto")
 	}
 	
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		fmt.Printf("\033[0;31m❌ Update failed: %v\033[0m\n", err)
+		fmt.Printf("\033[0;31m❌ Operation failed: %v\033[0m\n", err)
 		os.Exit(1)
 	}
 }
@@ -411,8 +411,8 @@ func main() {
 		case "build":
 			buildCmdy()
 		case "install":
-			// Use enhanced installer in install mode
-			cmd := exec.Command("./install.sh", "install", "git")
+			// Use installer script (let it handle all logic)
+			cmd := exec.Command("./install.sh", "git")
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			if err := cmd.Run(); err != nil {

@@ -20,26 +20,10 @@ REPO_RAW_URL="https://raw.githubusercontent.com/jdpierce21/cmdy/master"
 INSTALL_DIR="$HOME/.local/bin"
 CONFIG_DIR="$HOME/.config/cmdy"
 
-# Mode detection with auto-detection
-if [[ -n "${1}" ]]; then
-    MODE="${1}"
-else
-    # Auto-detect mode based on existing installation
-    if [[ -f "$HOME/.local/bin/cmdy" || -f "$HOME/.local/bin/cmdy.bin" ]]; then
-        MODE="update"
-    else
-        MODE="install"
-    fi
-fi
-SOURCE_METHOD="${2:-auto}"
-FORCE_UPDATE="${3:-}"
+SOURCE_METHOD="${1:-auto}"
+FORCE_UPDATE="${2:-}"
 
-# Smart messaging based on mode
-if [[ "$MODE" == "update" ]]; then
-    echo -e "\n${BLUE}🔄 Updating cmdy ... ${NC}\n"
-else
-    echo -e "\n${BLUE}🚀 Installing cmdy ... ${NC}\n"
-fi
+echo -e "\n${BLUE}🔄 cmdy installer ... ${NC}\n"
 
 # Function to detect OS
 detect_os() {
@@ -114,21 +98,22 @@ get_installed_version() {
     fi
 }
 
-# Function to check if update is needed
-check_version_and_skip_if_current() {
+# Function to check if installation/update is needed
+check_if_install_needed() {
     if [[ "$FORCE_UPDATE" == "--force" ]]; then
-        echo -e "${YELLOW}🔄 Force update requested...${NC}"
-        return 0  # Continue with update
+        echo -e "${YELLOW}🔄 Force install/update requested...${NC}"
+        return 0  # Continue with install
     fi
     
-    if [[ "$MODE" == "install" ]]; then
-        # Fresh install - always proceed
-        return 0
+    echo -e "${BLUE}🔍 Checking installation status...${NC}"
+    
+    # Check if cmdy is installed
+    if [[ ! -f "$INSTALL_DIR/cmdy" && ! -f "$INSTALL_DIR/cmdy.bin" ]]; then
+        echo -e "${BLUE}📦 cmdy not found, proceeding with installation...${NC}"
+        return 0  # Continue with install
     fi
     
-    echo -e "${BLUE}🔍 Checking for updates...${NC}"
-    
-    # Get current installed version
+    # cmdy is installed, check versions
     local current_version
     current_version=$(get_installed_version)
     
@@ -149,10 +134,10 @@ check_version_and_skip_if_current() {
     # Compare versions
     if [[ "$current_version" == "$latest_version" ]]; then
         echo -e "${GREEN}✓ Already up-to-date (build: ${current_version:0:7})${NC}"
-        return 1  # Skip update
+        return 1  # Skip install
     else
         echo -e "${BLUE}🔄 New version available (${current_version:0:7} → ${latest_version:0:7})${NC}"
-        return 0  # Continue with update
+        return 0  # Continue with install
     fi
 }
 
@@ -249,14 +234,12 @@ install_cmdy() {
             echo -e "${YELLOW}📁 Using existing source: $source_dir${NC}"
             cd "$source_dir"
             
-            # Update if this is an update mode
-            if [[ "$MODE" == "update" ]]; then
-                echo -e "${YELLOW}🔄 Pulling latest changes...${NC}"
-                git pull origin master > /dev/null 2>&1 || {
-                    echo -e "${RED}❌ Git pull failed${NC}"
-                    exit 1
-                }
-            fi
+            # Always pull latest changes when using git source
+            echo -e "${YELLOW}🔄 Pulling latest changes...${NC}"
+            git pull origin master > /dev/null 2>&1 || {
+                echo -e "${RED}❌ Git pull failed${NC}"
+                exit 1
+            }
         fi
     fi
     
@@ -312,26 +295,12 @@ EOF
         exit 1
     fi
     
-    # Handle config based on mode
-    if [[ "$MODE" == "install" ]]; then
-        # Fresh install - copy everything
-        echo -e "${YELLOW}📋 Installing configuration...${NC}"
-        cp config.yaml "$CONFIG_DIR/" > /dev/null 2>&1
-        cp -r scripts "$CONFIG_DIR/" > /dev/null 2>&1
-        chmod +x "$CONFIG_DIR/scripts"/*.sh 2>/dev/null || true
-        echo -e "${GREEN}✓ Configuration installed${NC}"
-    elif [[ "$MODE" == "update" ]]; then
-        # Update mode - preserve user config, backup new defaults
+    # Handle config based on existing installation
+    if [[ -f "$CONFIG_DIR/config.yaml" ]]; then
+        # Existing config - preserve and backup new defaults
         echo -e "${YELLOW}📋 Preserving user configuration...${NC}"
-        if [[ -f "$CONFIG_DIR/config.yaml" ]]; then
-            # Backup new config as reference
-            cp config.yaml "$CONFIG_DIR/config.yaml.new" > /dev/null 2>&1
-            echo -e "${GREEN}✓ User config preserved, new defaults saved as config.yaml.new${NC}"
-        else
-            # No existing config, install fresh
-            cp config.yaml "$CONFIG_DIR/" > /dev/null 2>&1
-            echo -e "${GREEN}✓ Configuration installed${NC}"
-        fi
+        cp config.yaml "$CONFIG_DIR/config.yaml.new" > /dev/null 2>&1
+        echo -e "${GREEN}✓ User config preserved, new defaults saved as config.yaml.new${NC}"
         
         # Update example scripts but preserve user scripts
         if [[ -d "$CONFIG_DIR/scripts" ]]; then
@@ -343,6 +312,13 @@ EOF
             chmod +x "$CONFIG_DIR/scripts"/*.sh 2>/dev/null || true
             echo -e "${GREEN}✓ Scripts installed${NC}"
         fi
+    else
+        # Fresh install - copy everything
+        echo -e "${YELLOW}📋 Installing configuration...${NC}"
+        cp config.yaml "$CONFIG_DIR/" > /dev/null 2>&1
+        cp -r scripts "$CONFIG_DIR/" > /dev/null 2>&1
+        chmod +x "$CONFIG_DIR/scripts"/*.sh 2>/dev/null || true
+        echo -e "${GREEN}✓ Configuration installed${NC}"
     fi
     
     # Cleanup if needed
@@ -471,21 +447,33 @@ verify_installation() {
 
 # Main installation/update flow
 main() {
-    # Check version first (may exit early if already up-to-date)
-    if ! check_version_and_skip_if_current; then
+    # Check if install/update is needed (may exit early if already up-to-date)
+    if ! check_if_install_needed; then
         exit 0  # Already up-to-date, exit gracefully
     fi
     
-    if [[ "$MODE" == "install" ]]; then
-        # Full installation flow
-        install_dependencies
-        create_directories
-        install_cmdy
-        create_wrapper
+    # Determine if this is fresh install or update for messaging
+    local is_fresh_install=false
+    if [[ ! -f "$INSTALL_DIR/cmdy" && ! -f "$INSTALL_DIR/cmdy.bin" ]]; then
+        is_fresh_install=true
+    fi
+    
+    # Install/update flow
+    install_dependencies
+    create_directories
+    install_cmdy
+    create_wrapper
+    
+    # Only setup PATH for fresh installs
+    if [[ "$is_fresh_install" == true ]]; then
         setup_path
-        verify_installation
-
-        echo
+    fi
+    
+    verify_installation
+    
+    # Success messaging based on install type
+    echo
+    if [[ "$is_fresh_install" == true ]]; then
         echo -e "🎉🎉🎉 Installation completed successfully! 🎉🎉🎉"
         echo
         echo -e "${BLUE}Next steps:${NC}"
@@ -497,16 +485,7 @@ main() {
         echo "  $INSTALL_DIR/cmdy    # Run directly"
         echo
         echo -e "${YELLOW}⭐ Star the repo: $REPO_URL${NC}"
-        
-    elif [[ "$MODE" == "update" ]]; then
-        # Streamlined update flow
-        install_dependencies  # Ensure deps are current
-        create_directories    # Ensure dirs exist
-        install_cmdy         # Smart source detection & config preservation
-        verify_installation  # Ensure it works
-        
-        # Wrapper already exists, no PATH setup needed
-        echo
+    else
         echo -e "${GREEN}✓ Updated successfully!${NC}"
         echo
         echo -e "${BLUE}What was updated:${NC}"
@@ -519,11 +498,6 @@ main() {
         echo -e "${BLUE}Your customizations preserved:${NC}"
         echo "  Config: $CONFIG_DIR/config.yaml"
         echo "  User scripts: $CONFIG_DIR/scripts/user/"
-        
-    else
-        echo -e "${RED}❌ Unknown mode: $MODE${NC}"
-        echo "Usage: $0 [install|update] [git|download|auto] [--force]"
-        exit 1
     fi
 }
 
