@@ -1,10 +1,6 @@
-<p align="center">
-  <img src="logo2.png" alt="cmdy logo" width="400"/>
-</p>
+![cmdy logo](logo2.png)
 
-<p align="center">
-  A modern CLI command assistant for running OS-specific commands through an interactive menu.
-</p>
+*A modern CLI command assistant for running OS-specific commands through an interactive menu.*
 
 ## Features
 
