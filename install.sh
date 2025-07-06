@@ -36,16 +36,16 @@ print_status() {
     
     case "$status" in
         "pass"|"success"|"ok")
-            echo -e "${GREEN}✅ ${message}${NC}"
+            echo -e "${message} ✅"
             ;;
         "fail"|"error"|"err")
-            echo -e "${RED}❌ ${message}${NC}"
+            echo -e "${message} ❌"
             ;;
         "warn"|"warning")
-            echo -e "${YELLOW}⚠️  ${message}${NC}"
+            echo -e "${message} ⚠️"
             ;;
         "info"|"note")
-            echo -e "${BLUE}ℹ️  ${message}${NC}"
+            echo -e "${message} ℹ️"
             ;;
         "progress"|"working")
             echo -e "${message}"
@@ -218,19 +218,19 @@ install_dependencies() {
             exit 1
         fi
     fi
-    print_status "success" "📦 Checking dependencies"
+    print_status "success" "🔧 Checking dependencies"
 }
 
 # Function to create directories
 create_directories() {
     mkdir -p "$INSTALL_DIR"
     mkdir -p "$CONFIG_DIR"
-    print_status "success" "📁 Creating directories"
+    print_status "success" "🔧 Creating directories"
 }
 
 # Function to build and install cmdy from source
 install_cmdy() {
-    local status="🔨 Building cmdy from source... ✅"
+    local status="🔧 Building cmdy from source"
     local source_dir=""
     local cleanup_needed=false
     
@@ -240,11 +240,11 @@ install_cmdy() {
     source_dir=$(find_cmdy_source)
     if [[ -n "$source_dir" ]]; then
         # Use existing git repository
-        echo -e "📁 Using existing source: $source_dir"
+        echo -e "🔧 Using existing source: $source_dir"
         cd "$source_dir"
         
         # Always pull latest changes when using git source
-        echo -e "🔄 Pulling latest changes..."
+        echo -e "🔧 Pulling latest changes..."
         git pull origin master > /dev/null 2>&1 || {
             echo -e "${RED}❌ Git pull failed${NC}"
             exit 1
@@ -256,7 +256,7 @@ install_cmdy() {
         cleanup_needed=true
         cd "$TEMP_DIR"
         
-        echo -e "📥 Downloading source..."
+        echo -e "🔧 Downloading source..."
         git clone "$REPO_URL.git" . > /dev/null 2>&1 || {
             echo -e "${RED}❌ Failed to download source${NC}"
             exit 1
@@ -264,7 +264,7 @@ install_cmdy() {
     fi
     
     # Build binary with consistent optimization and version embedding
-    echo -e "🔨 Building optimized binary..."
+    echo -e "🔧 Building optimized binary..."
     local current_hash=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
     local build_date=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
     
@@ -284,7 +284,7 @@ install_cmdy() {
         chmod +x "$INSTALL_DIR/cmdy.bin"
 
         # Save version information
-        echo -e "📋 Saving version info..."
+        echo -e "🔧 Saving version info..."
         mkdir -p "$CONFIG_DIR"
         cat > "$CONFIG_DIR/version.json" << EOF
 {
@@ -302,7 +302,7 @@ EOF
     # Handle config based on existing installation
     if [[ -f "$CONFIG_DIR/config.yaml" ]]; then
         # Existing config - preserve and backup new defaults
-        echo -e "📋 Preserving user configuration..."
+        echo -e "🔧 Preserving user configuration..."
         cp config.yaml "$CONFIG_DIR/config.yaml.new" > /dev/null 2>&1
         
         # Update example scripts but preserve user scripts
@@ -312,15 +312,15 @@ EOF
         else
             cp -r scripts "$CONFIG_DIR/" > /dev/null 2>&1
             chmod +x "$CONFIG_DIR/scripts"/*.sh 2>/dev/null || true
-            print_status "success" "Scripts installed"
+            print_status "success" "🔧 Scripts installed"
         fi
     else
         # Fresh install - copy everything
-        echo -e "📋 Installing configuration..."
+        echo -e "🔧 Installing configuration..."
         cp config.yaml "$CONFIG_DIR/" > /dev/null 2>&1
         cp -r scripts "$CONFIG_DIR/" > /dev/null 2>&1
         chmod +x "$CONFIG_DIR/scripts"/*.sh 2>/dev/null || true
-        print_status "success" "Configuration installed"
+        print_status "success" "🔧 Configuration installed"
     fi
     
     # Cleanup if needed
@@ -329,7 +329,7 @@ EOF
         rm -rf "$TEMP_DIR"
     fi
     
-    print_status "success" "Build and install completed"
+    print_status "success" "🔧 Build and install completed"
 }
 
 # Function to setup PATH
@@ -421,9 +421,9 @@ EOF
     # Check if wrapper was created successfully
     if [[ -f "$INSTALL_DIR/cmdy" ]]; then
         chmod +x "$INSTALL_DIR/cmdy"
-        print_status "success" "📝 Creating wrapper script"
+        print_status "success" "🔧 Creating wrapper script"
     else
-        print_status "fail" "📝 Creating wrapper script - Failed to create wrapper"
+        print_status "fail" "🔧 Creating wrapper script - Failed to create wrapper"
         exit 1
     fi
 }
@@ -441,9 +441,9 @@ verify_installation() {
         fail=1
     fi
     if [[ $fail -eq 0 ]]; then
-        print_status "success" "🔍 Verifying installation"
+        print_status "success" "🔧 Verifying installation"
     else
-        print_status "fail" "🔍 Verifying installation - One or more checks failed"
+        print_status "fail" "🔧 Verifying installation - One or more checks failed"
     fi
 }
 
