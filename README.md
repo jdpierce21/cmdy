@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="logo2.png" alt="cmdy logo" width="400">
+  <img src="logo2.png" alt="cmdy logo" width="400"/>
+</p>
+
+<p align="center">
   A modern CLI command assistant for running OS-specific commands through an interactive menu.
 </p>
 
