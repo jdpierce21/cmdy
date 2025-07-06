@@ -4,20 +4,13 @@
 
 A modern CLI command assistant for running OS-specific commands through an interactive menu.
 
-## Features
-
-- **⚡ Lightning fast** - Optimized Go binary with minimal overhead
-- **🌍 Cross-platform** - Linux, macOS, Windows support
-- **📝 Simple config** - Clean YAML format, no complex syntax
-- **🎨 Modern UI** - Beautiful fzf interface with fuzzy search
-- **🔄 OS-aware** - Automatically runs the correct commands for your OS
-- **🚀 Zero dependencies** - Single binary, no runtime requirements
-- **🔍 Auto-discovery** - Automatically finds executable scripts
-- **🛠️ Self-managing** - Updates and maintains itself
-- **🔒 Config preservation** - Never overwrites your customizations
-- **💬 Transparent** - Clear feedback and helpful error messages
-- **🏗️ Layered structure** - Clear separation of examples vs user scripts
-- **🔒 Safe customization** - User scripts protected from updates
+**Features**
+**⚡ Lightning fast** - Optimized Go binary with minimal overhead
+**📝 Simple configuration** - Clean YAML format, no complex syntax
+**🎨 Modern UI** - Beautiful fzf interface with fuzzy search
+**🔄 OS-aware** - Runs the correct commands for your OS
+**🚀 Zero dependencies** - Single binary, no runtime requirements
+**🔒 Safe updates** - Custom scripts and configuration protected from updates
 
 ## Installation
 
