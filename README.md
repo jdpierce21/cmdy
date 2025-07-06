@@ -1,6 +1,6 @@
 ![cmdy logo](logo2.png)
 
-![Release](https://img.shields.io/badge/release-v0.16.2-orange)
+![Release](https://img.shields.io/badge/release-v0.0.1-orange)
 ![Go Reference](https://img.shields.io/badge/go-reference-blue?logo=go)
 ![Build](https://img.shields.io/github/actions/workflow/status/jdpierce21/cmdy/build.yml?label=build&logo=github)
 
