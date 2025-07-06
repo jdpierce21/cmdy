@@ -12,8 +12,8 @@ A modern tool for running shell commands with style. Effortless and powerful CLI
 - **📝 Simple configuration** - Clean YAML format, no complex syntax
 - **🎨 Modern UI** - Beautiful fzf interface with fuzzy search
 - **🔄 OS-aware** - Runs the correct commands for your OS
--**🚀 Zero dependencies** - Single binary, no runtime requirements
--**🔒 Safe updates** - Custom scripts and configuration protected from updates
+- **🚀 Zero dependencies** - Single binary, no runtime requirements
+- **🔒 Safe updates** - Custom scripts and configuration protected from updates
 
 ## Installation
 
