@@ -1,4 +1,4 @@
-![image](logo.png)
+!(logo.png)
 
 A modern CLI command assistant for running OS-specific commands through an interactive menu.
 
