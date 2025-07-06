@@ -2,7 +2,7 @@
 
 ![Release](https://img.shields.io/badge/release-v0.16.2-orange)
 ![Go Reference](https://img.shields.io/badge/go-reference-blue?logo=go)
-![Build](https://img.shields.io/github/actions/workflow/status/yourusername/yourrepo/build.yml?label=build&logo=github)
+![Build](https://img.shields.io/github/actions/workflow/status/jdpierce21/cmdy/build.yml?label=build&logo=github)
 
 A modern tool for running shell commands with style. Effortless and powerful CLI interactions presented through a sleek, searchable fzf interface.
 
