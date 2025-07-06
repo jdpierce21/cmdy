@@ -29,6 +29,33 @@ fi
 
 echo -e "\n${BLUE}cmdy - powerful CLI, modern UX${NC}\n"
 
+# Function to print standardized status messages
+print_status() {
+    local status="$1"
+    local message="$2"
+    
+    case "$status" in
+        "pass"|"success"|"ok")
+            echo -e "${GREEN}✅ ${message}${NC}"
+            ;;
+        "fail"|"error"|"err")
+            echo -e "${RED}❌ ${message}${NC}"
+            ;;
+        "warn"|"warning")
+            echo -e "${YELLOW}⚠️  ${message}${NC}"
+            ;;
+        "info"|"note")
+            echo -e "${BLUE}ℹ️  ${message}${NC}"
+            ;;
+        "progress"|"working")
+            echo -e "${message}"
+            ;;
+        *)
+            echo -e "${message}"
+            ;;
+    esac
+}
+
 # Function to detect OS
 detect_os() {
     case "$(uname -s)" in
@@ -91,7 +118,7 @@ check_if_install_needed() {
         return 0  # Continue with install
     fi
     
-    echo -e "🔍 Checking installation status... ✅"
+    echo -e "🔍 Checking installation status..."
     
     # Check if cmdy is installed
     if [[ ! -f "$INSTALL_DIR/cmdy" && ! -f "$INSTALL_DIR/cmdy.bin" ]]; then
@@ -191,14 +218,14 @@ install_dependencies() {
             exit 1
         fi
     fi
-    echo -e "📦 Checking dependencies... ✅"
+    print_status "success" "📦 Checking dependencies"
 }
 
 # Function to create directories
 create_directories() {
     mkdir -p "$INSTALL_DIR"
     mkdir -p "$CONFIG_DIR"
-    echo -e "📁 Creating directories... ✅"
+    print_status "success" "📁 Creating directories"
 }
 
 # Function to build and install cmdy from source
@@ -285,7 +312,7 @@ EOF
         else
             cp -r scripts "$CONFIG_DIR/" > /dev/null 2>&1
             chmod +x "$CONFIG_DIR/scripts"/*.sh 2>/dev/null || true
-            echo -e "${GREEN}✓ Scripts installed${NC}"
+            print_status "success" "Scripts installed"
         fi
     else
         # Fresh install - copy everything
@@ -293,7 +320,7 @@ EOF
         cp config.yaml "$CONFIG_DIR/" > /dev/null 2>&1
         cp -r scripts "$CONFIG_DIR/" > /dev/null 2>&1
         chmod +x "$CONFIG_DIR/scripts"/*.sh 2>/dev/null || true
-        echo -e "${GREEN}✓ Configuration installed${NC}"
+        print_status "success" "Configuration installed"
     fi
     
     # Cleanup if needed
@@ -302,7 +329,7 @@ EOF
         rm -rf "$TEMP_DIR"
     fi
     
-    echo -e "${GREEN}✅ Build and install completed${NC}"
+    print_status "success" "Build and install completed"
 }
 
 # Function to setup PATH
@@ -367,11 +394,11 @@ setup_path() {
     fi
 
     if [[ $fail -eq 0 ]]; then
-        echo -e "🔧 Setting up PATH... ✅"
+        print_status "success" "🔧 Setting up PATH"
     elif [[ -n "$SHELL_RC" ]]; then
-        echo -e "${YELLOW}🔧 Setting up PATH... ⚠️ PATH may not be updated for new shells${NC}"
+        print_status "warn" "🔧 Setting up PATH - PATH may not be updated for new shells"
     else
-        echo -e "${RED}🔧 Setting up PATH... ❌ Could not determine or modify shell rc file${NC}"
+        print_status "fail" "🔧 Setting up PATH - Could not determine or modify shell rc file"
     fi
 }
 
@@ -394,9 +421,9 @@ EOF
     # Check if wrapper was created successfully
     if [[ -f "$INSTALL_DIR/cmdy" ]]; then
         chmod +x "$INSTALL_DIR/cmdy"
-        echo -e "📝 Creating wrapper script... ✅"
+        print_status "success" "📝 Creating wrapper script"
     else
-        echo -e "${RED}📝 Creating wrapper script... ❌ Failed to create wrapper${NC}"
+        print_status "fail" "📝 Creating wrapper script - Failed to create wrapper"
         exit 1
     fi
 }
@@ -414,9 +441,9 @@ verify_installation() {
         fail=1
     fi
     if [[ $fail -eq 0 ]]; then
-        echo -e "🔍 Verifying installation... ✅"
+        print_status "success" "🔍 Verifying installation"
     else
-        echo -e "${RED}🔍 Verifying installation... ❌ One or more checks failed${NC}"
+        print_status "fail" "🔍 Verifying installation - One or more checks failed"
     fi
 }
 
