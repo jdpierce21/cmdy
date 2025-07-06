@@ -4,7 +4,8 @@
 
 A modern CLI command assistant for running OS-specific commands through an interactive menu.
 
-**Features**
+## Features
+
 **⚡ Lightning fast** - Optimized Go binary with minimal overhead
 **📝 Simple configuration** - Clean YAML format, no complex syntax
 **🎨 Modern UI** - Beautiful fzf interface with fuzzy search
