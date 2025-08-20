@@ -24,7 +24,7 @@ curl -sSL https://raw.githubusercontent.com/jdpierce21/cmdy/master/install.sh | 
 ```
 
 This one-liner will automatically:
-- ✅ Install dependencies (fzf, Go)
+- ✅ Install dependencies (git, fzf, Go)
 - ✅ Build cmdy from source  
 - ✅ Install to `~/.local/bin/cmdy`
 - ✅ Set up configuration in `~/.config/cmdy/`
