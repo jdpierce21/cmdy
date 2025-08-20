@@ -38,7 +38,7 @@ This one-liner will automatically:
    sudo apt install git golang-go fzf
    
    # macOS
-   brew install go fzf
+   brew install git go fzf
    ```
 
 2. **Clone and build**:
