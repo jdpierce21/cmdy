@@ -35,7 +35,7 @@ This one-liner will automatically:
 1. **Install dependencies**:
    ```bash
    # Ubuntu/Debian
-   sudo apt install golang-go fzf
+   sudo apt install git golang-go fzf
    
    # macOS
    brew install go fzf
